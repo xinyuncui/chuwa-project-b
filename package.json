@@ -11,15 +11,17 @@
     "start:backend": "cd server && npm run dev",
     "start:frontend": "npm run dev",
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
-
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.5.0",
+    "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "mongodb": "^6.12.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

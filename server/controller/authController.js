@@ -7,7 +7,7 @@ export const signup = async (req, res) => {
     const token = req.params.token;
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    console.log(decoded);
+    console.log("token:", decoded);
 
     let employee = await Employee.findOne({ email });
 
@@ -57,5 +57,19 @@ export const login = async (req, res) => {
     res.status(200).json({ token: token, message: "login successfully" });
   } catch (err) {
     res.status(500).json({ message: `server error: ${err.message}` });
+  }
+};
+
+export const refreshPage = (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ valid: false, message: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    return res.status(200).json({ valid: true, user: decoded.employee });
+  } catch (err) {
+    return res.status(401).json({ valid: false, message: err });
   }
 };
