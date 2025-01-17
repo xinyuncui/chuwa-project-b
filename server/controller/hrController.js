@@ -8,7 +8,7 @@ export const hrSendEmail = async (req, res) => {
       .json({ message: "Invalid or missing email address" });
   }
   try {
-    await sendRegistrationEmail(email);
+    const link = await sendRegistrationEmail(email);
     res.status(200).json({ message: "Email sent successfully" });
   } catch (e) {
     res.status(500).json("error", e.message);

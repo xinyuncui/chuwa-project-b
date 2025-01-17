@@ -12,7 +12,7 @@ export const sendRegistrationEmail = async (employeeEmail) => {
     }
   );
 
-  const registrationLink = `http://localhost:3000/auth/signup/${registrationToken}`;
+  const registrationLink = `http://localhost:5173/signup/${registrationToken}`;
 
   //   // Create a test account (only for development/testing)
   //   const testAccount = await nodemailer.createTestAccount();
@@ -57,6 +57,7 @@ export const sendRegistrationEmail = async (employeeEmail) => {
     const info = await transporter.sendMail(mailOptions);
     console.log(`Registration email sent to ${employeeEmail}`);
     console.log("Message sent: %s", info.messageId);
+    return registrationLink;
     // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
   } catch (e) {
     console.log("email sent failed");
