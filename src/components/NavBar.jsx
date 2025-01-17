@@ -74,6 +74,7 @@ const NavBar = ({ isLoggedIn }) => {
                   onClick={() => {
                     handleMenuClose();
                     handleLogout();
+                    navigate("/login");
                   }}
                 >
                   Logout
@@ -97,6 +98,9 @@ const NavBar = ({ isLoggedIn }) => {
                 onClose={handleMenuClose}
               >
                 <MenuItem onClick={handleMenuClose}>Home</MenuItem>
+                <MenuItem onClick={() => navigate("/hr-send-email")}>
+                  Send Regisration Link
+                </MenuItem>
                 <MenuItem onClick={handleMenuClose}>Employee Profiles</MenuItem>
                 <MenuItem onClick={handleMenuClose}>
                   Visa Status Management
@@ -106,6 +110,7 @@ const NavBar = ({ isLoggedIn }) => {
                   onClick={() => {
                     handleMenuClose();
                     handleLogout();
+                    navigate("/login");
                   }}
                 >
                   Logout

@@ -5,6 +5,7 @@ import Container from "react-bootstrap/Container";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NavBar from "./components/NavBar";
+import HRSendEmail from "./pages/HRSendEmail";
 function App() {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
@@ -18,6 +19,7 @@ function App() {
             {/* <Route path="/" element={} /> */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup/:token" element={<Signup />} />
+            <Route path="hr-send-email" element={<HRSendEmail />} />
           </Routes>
         </Container>
       </Router>

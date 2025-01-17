@@ -16,7 +16,7 @@ import axios from "axios";
 import { setAuthenticated, setUser } from "../redux/authSlice";
 import { baseUrl } from "../utils/service";
 
-const SignInPage = () => {
+const Login = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -127,4 +127,4 @@ const SignInPage = () => {
   );
 };
 
-export default SignInPage;
+export default Login;
