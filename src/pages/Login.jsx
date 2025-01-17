@@ -51,7 +51,9 @@ const Login = () => {
       console.log("login success");
 
       // if application status is approved, redirect to homepage, otherwise redirect to onboarding application page
-      //   navigate('/onboardingApplication')
+      if (user.role === "EMPLOYEE") {
+        navigate("/personal-information");
+      }
     } catch (err) {
       console.error("Login failed:", err);
       setError(

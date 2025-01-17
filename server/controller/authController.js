@@ -1,4 +1,4 @@
-import Employee from "../model/employeeDB.js";
+import User from "../model/employeeDB.js";
 import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
@@ -9,13 +9,13 @@ export const signup = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     console.log("token:", decoded);
 
-    let employee = await Employee.findOne({ email });
+    let employee = await User.findOne({ email });
 
     if (employee) {
       return res.status(400).json({ message: "Username already exists" });
     }
 
-    employee = new Employee({
+    employee = new User({
       username,
       email,
       password,
@@ -32,7 +32,8 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    let employee = await Employee.findOne({ username: username });
+    console.log("login request received");
+    let employee = await User.findOne({ username: username });
 
     if (!employee) {
       return res.status(400).json({ message: "User not found" });
