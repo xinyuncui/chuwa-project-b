@@ -4,15 +4,14 @@ import {
   Button,
   TextField,
   Typography,
-  Grid,
   Avatar,
   Card,
   CardContent,
   IconButton,
   Dialog,
   DialogActions,
-  DialogTitle,
   DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -21,9 +20,7 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 const PersonalInformationPage = () => {
-  // State management for edit mode and personal data
-  const [editMode, setEditMode] = useState(false);
-  const [personalInfo, setPersonalInfo] = useState({
+  const initialData = {
     name: {
       firstName: "John",
       lastName: "Doe",
@@ -55,6 +52,7 @@ const PersonalInformationPage = () => {
       {
         firstName: "Jane",
         lastName: "Doe",
+        middleName: "",
         phone: "123-456-7890",
         email: "janedoe@example.com",
         relationship: "Spouse",
@@ -72,24 +70,38 @@ const PersonalInformationPage = () => {
         url: "/path/to/work-authorization.pdf",
       },
     ],
-  });
+  };
 
-  // Handle edit toggle
-  const toggleEditMode = () => setEditMode(!editMode);
+  const [personalInfo, setPersonalInfo] = useState(initialData);
+  const [tempData, setTempData] = useState(initialData);
+  const [editMode, setEditMode] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
-  // Handle cancel changes
+  const toggleEditMode = () => {
+    if (!editMode) {
+      setTempData(personalInfo); // Save current state to temp
+    }
+    setEditMode(!editMode);
+  };
+
   const handleCancel = () => {
+    setConfirmDiscard(true); // Open confirmation dialog
+  };
+
+  const confirmDiscardChanges = (discard) => {
+    if (discard) {
+      setPersonalInfo(tempData); // Revert changes
+    }
+    setConfirmDiscard(false);
     setEditMode(false);
   };
 
-  // Handle save changes
   const handleSave = () => {
+    setPersonalInfo(tempData); // Save changes to main state
     setEditMode(false);
-    // Implement save logic here
   };
 
-  // Render section
-  const renderEditableSection = (label, value, fieldName) => (
+  const renderEditableSection = (label, value, keyPath) => (
     <Box sx={{ mb: 2 }}>
       <Typography variant="h6">{label}</Typography>
       {editMode ? (
@@ -97,9 +109,14 @@ const PersonalInformationPage = () => {
           fullWidth
           value={value}
           onChange={(e) =>
-            setPersonalInfo({
-              ...personalInfo,
-              [fieldName]: e.target.value,
+            setTempData((prev) => {
+              const updated = { ...prev };
+              const keys = keyPath.split(".");
+              keys.reduce((acc, key, i) => {
+                if (i === keys.length - 1) acc[key] = e.target.value;
+                else return acc[key];
+              }, updated);
+              return updated;
             })
           }
         />
@@ -147,59 +164,93 @@ const PersonalInformationPage = () => {
             </Box>
           </Box>
 
-          {/* Avatar Section */}
+          {/* Profile Picture */}
           <Box sx={{ textAlign: "center", mt: 3 }}>
             <Avatar
               src={personalInfo.avatar}
               sx={{ width: 100, height: 100, margin: "auto" }}
             />
-            <Typography variant="body1" sx={{ mt: 1 }}>
-              Profile Picture
-            </Typography>
+            <Typography variant="body1">Profile Picture</Typography>
           </Box>
 
           {/* Name Section */}
-          {renderEditableSection("First Name", personalInfo.name.firstName, "firstName")}
-          {renderEditableSection("Last Name", personalInfo.name.lastName, "lastName")}
-          {renderEditableSection("Preferred Name", personalInfo.name.preferredName, "preferredName")}
-          {renderEditableSection("Email", personalInfo.email, "email")}
-          {renderEditableSection("SSN", personalInfo.ssn, "ssn")}
-          {renderEditableSection("Birth Date", personalInfo.birthDate, "birthDate")}
+          {renderEditableSection("First Name", tempData.name.firstName, "name.firstName")}
+          {renderEditableSection("Last Name", tempData.name.lastName, "name.lastName")}
+          {renderEditableSection("Middle Name", tempData.name.middleName, "name.middleName")}
+          {renderEditableSection("Preferred Name", tempData.name.preferredName, "name.preferredName")}
+          {renderEditableSection("Email", tempData.email, "email")}
+          {renderEditableSection("SSN", tempData.ssn, "ssn")}
+          {renderEditableSection("Birth Date", tempData.birthDate, "birthDate")}
+          {renderEditableSection("Gender", tempData.gender, "gender")}
 
           {/* Address Section */}
           <Typography variant="h6" sx={{ mt: 3 }}>
             Address
           </Typography>
-          {renderEditableSection(
-            "Building/Apt #",
-            personalInfo.address.building,
-            "building"
-          )}
-          {renderEditableSection("Street", personalInfo.address.street, "street")}
-          {renderEditableSection("City", personalInfo.address.city, "city")}
-          {renderEditableSection("State", personalInfo.address.state, "state")}
-          {renderEditableSection("ZIP", personalInfo.address.zip, "zip")}
+          {renderEditableSection("Building/Apt #", tempData.address.building, "address.building")}
+          {renderEditableSection("Street", tempData.address.street, "address.street")}
+          {renderEditableSection("City", tempData.address.city, "address.city")}
+          {renderEditableSection("State", tempData.address.state, "address.state")}
+          {renderEditableSection("ZIP", tempData.address.zip, "address.zip")}
+
+          {/* Contact Info Section */}
+          <Typography variant="h6" sx={{ mt: 3 }}>
+            Contact Info
+          </Typography>
+          {renderEditableSection("Cell Phone", tempData.contactInfo.cellPhone, "contactInfo.cellPhone")}
+          {renderEditableSection("Work Phone", tempData.contactInfo.workPhone, "contactInfo.workPhone")}
+
+          {/* Employment Section */}
+          <Typography variant="h6" sx={{ mt: 3 }}>
+            Employment
+          </Typography>
+          {renderEditableSection("Visa Title", tempData.employment.visaTitle, "employment.visaTitle")}
+          {renderEditableSection("Start Date", tempData.employment.startDate, "employment.startDate")}
+          {renderEditableSection("End Date", tempData.employment.endDate, "employment.endDate")}
+
+          {/* Emergency Contact Section */}
+          <Typography variant="h6" sx={{ mt: 3 }}>
+            Emergency Contact
+          </Typography>
+          {tempData.emergencyContacts.map((contact, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
+              {renderEditableSection("First Name", contact.firstName, `emergencyContacts.${index}.firstName`)}
+              {renderEditableSection("Last Name", contact.lastName, `emergencyContacts.${index}.lastName`)}
+              {renderEditableSection("Phone", contact.phone, `emergencyContacts.${index}.phone`)}
+              {renderEditableSection("Email", contact.email, `emergencyContacts.${index}.email`)}
+              {renderEditableSection("Relationship", contact.relationship, `emergencyContacts.${index}.relationship`)}
+            </Box>
+          ))}
 
           {/* Documents Section */}
           <Typography variant="h6" sx={{ mt: 3 }}>
             Documents
           </Typography>
-          {personalInfo.documents.map((doc) => (
-            <Box
-              key={doc.id}
-              sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}
-            >
+          {tempData.documents.map((doc) => (
+            <Box key={doc.id} sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
               <Typography>{doc.name}</Typography>
               <Box>
                 <IconButton onClick={() => window.open(doc.url)}>
                   <VisibilityIcon />
                 </IconButton>
-                <IconButton onClick={() => alert(`Download ${doc.name}`)}>
+                <IconButton onClick={() => alert(`Downloading ${doc.name}`)}>
                   <FileDownloadIcon />
                 </IconButton>
               </Box>
             </Box>
           ))}
+
+          {/* Confirmation Dialog */}
+          <Dialog open={confirmDiscard} onClose={() => setConfirmDiscard(false)}>
+            <DialogTitle>Discard Changes?</DialogTitle>
+            <DialogContent>
+              <Typography>Are you sure you want to discard all changes?</Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => confirmDiscardChanges(false)}>No</Button>
+              <Button onClick={() => confirmDiscardChanges(true)}>Yes</Button>
+            </DialogActions>
+          </Dialog>
         </CardContent>
       </Card>
     </Box>
