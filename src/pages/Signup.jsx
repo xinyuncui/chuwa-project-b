@@ -16,7 +16,7 @@ import { baseUrl } from "../utils/service";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true); // Show loading spinner while waiting for token to be fetched from backend
+
   const { token } = useParams(); // extract token from frontend url
   const [formData, setFormData] = useState({
     email: "",
