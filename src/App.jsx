@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NavBar from "./components/NavBar";
 import HRSendEmail from "./pages/HRSendEmail";
+import PersonalInformationPage from "./pages/PersonalInformation";
 function App() {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
@@ -20,6 +21,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup/:token" element={<Signup />} />
             <Route path="hr-send-email" element={<HRSendEmail />} />
+            <Route path="/personal-information" element={<PersonalInformationPage />}/> 
           </Routes>
         </Container>
       </Router>
