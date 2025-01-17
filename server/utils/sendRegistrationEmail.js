@@ -8,7 +8,7 @@ export const sendRegistrationEmail = async (employeeEmail) => {
     payload,
     process.env.JWT_SECRET_KEY,
     {
-      expiresIn: "7d",
+      expiresIn: "3h",
     }
   );
 

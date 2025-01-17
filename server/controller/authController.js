@@ -1,27 +1,36 @@
 import User from "../model/employeeDB.js";
 import jwt from "jsonwebtoken";
+import registrationHistory from "../model/RegistrationHistory.js";
 
 export const signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const token = req.params.token;
 
+    // check token validity
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     console.log("token:", decoded);
 
+    // check if user is already registered
     let employee = await User.findOne({ email });
-
     if (employee) {
       return res.status(400).json({ message: "Username already exists" });
     }
 
+    // save user to db
     employee = new User({
       username,
       email,
       password,
     });
-
     await employee.save();
+
+    // change registration history status to submmited
+    let registration = await registrationHistory.findOne({ email });
+    if (registration) {
+      registration.registrationStatus = "submitted";
+      await registration.save(); // Save the updated document to the database
+    }
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {

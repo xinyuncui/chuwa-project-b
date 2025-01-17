@@ -53,6 +53,8 @@ const Login = () => {
       // if application status is approved, redirect to homepage, otherwise redirect to onboarding application page
       if (user.role === "EMPLOYEE") {
         navigate("/personal-information");
+      } else if (user.role === "HR") {
+        navigate("/hiring-management");
       }
     } catch (err) {
       console.error("Login failed:", err);

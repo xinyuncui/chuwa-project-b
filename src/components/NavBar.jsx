@@ -98,14 +98,16 @@ const NavBar = ({ isLoggedIn }) => {
                 onClose={handleMenuClose}
               >
                 <MenuItem onClick={handleMenuClose}>Home</MenuItem>
-                <MenuItem onClick={() => navigate("/hr-send-email")}>
+                {/* <MenuItem onClick={() => navigate("/hr-send-email")}>
                   Send Regisration Link
-                </MenuItem>
+                </MenuItem> */}
                 <MenuItem onClick={handleMenuClose}>Employee Profiles</MenuItem>
                 <MenuItem onClick={handleMenuClose}>
                   Visa Status Management
                 </MenuItem>
-                <MenuItem onClick={handleMenuClose}>Hiring Management</MenuItem>
+                <MenuItem onClick={() => navigate("/hiring-management")}>
+                  Hiring Management
+                </MenuItem>
                 <MenuItem
                   onClick={() => {
                     handleMenuClose();
