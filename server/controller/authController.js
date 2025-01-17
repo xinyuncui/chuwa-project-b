@@ -54,7 +54,14 @@ export const login = async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.status(200).json({ token: token, message: "login successfully" });
+    // Exclude the password field
+    const { password: _, ...safeEmployee } = employee.toObject();
+
+    res.status(200).json({
+      token: token,
+      user: safeEmployee, // Exclude the password field
+      message: "login successfully",
+    });
   } catch (err) {
     res.status(500).json({ message: `server error: ${err.message}` });
   }

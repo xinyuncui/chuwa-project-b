@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { baseUrl } from "./service";
+import { setUser, setAuthenticated, logout } from "../redux/authSlice";
 // handle page refersh, token validation and sesseion management
 const TokenValidator = () => {
+  console.log("refersh");
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   const checkLoginStatus = async () => {
     const token = localStorage.getItem("authToken");
     if (token) {
       try {
         const response = await axios.post(
-          `${baseUrl}/auth/verifyToken`,
+          `${baseUrl}/auth/refresh`,
           {}, // No request body
           {
             headers: {
@@ -22,38 +24,39 @@ const TokenValidator = () => {
           }
         );
 
-        const data = await response.json();
+        const data = response.data;
 
         if (data.valid) {
           // dispatch user data to redux
-          //-----code----
+          dispatch(setUser(data.user));
+          dispatch(setAuthenticated(true));
         } else {
           localStorage.removeItem("authToken");
+          localStorage.removeItem("user");
           // dispatch, clear user in redux store
-          //-----code----
-          window.location.href = "/login"; // Redirect if invalid token
+          dispatch(logout());
+          navigate("/login"); // Redirect
         }
       } catch (err) {
         console.error("Error verifying token:", err);
-        window.location.href = "/login";
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        navigate("/login"); // Redirect
         // dispatch, clear user in redux store
         //-----code----
       }
     } else {
-      // dispatch, clear user in redux store
-      //-----code----
-      window.location.href = "/login"; // Redirect if no token
+      navigate("/login"); // Redirect
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     checkLoginStatus();
-  }, []);
+  }, [dispatch]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  //   if (loading) {
+  //     return <div>Loading...</div>;
+  //   }
 
   return null; // This component doesn't render anything once done
 };
