@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -12,93 +12,85 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  CircularProgress,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
 
 const PersonalInformationPage = () => {
-  const initialData = {
-    name: {
-      firstName: "John",
-      lastName: "Doe",
-      middleName: "M",
-      preferredName: "Johnny",
-    },
-    avatar: "https://via.placeholder.com/150",
-    email: "johndoe@example.com",
-    ssn: "123-45-6789",
-    birthDate: "1990-01-01",
-    gender: "Male",
-    address: {
-      building: "123",
-      street: "Main St",
-      city: "San Francisco",
-      state: "CA",
-      zip: "94101",
-    },
-    contactInfo: {
-      cellPhone: "123-456-7890",
-      workPhone: "098-765-4321",
-    },
-    employment: {
-      visaTitle: "H1-B",
-      startDate: "2023-01-01",
-      endDate: "2026-01-01",
-    },
-    emergencyContacts: [
-      {
-        firstName: "Jane",
-        lastName: "Doe",
-        middleName: "",
-        phone: "123-456-7890",
-        email: "janedoe@example.com",
-        relationship: "Spouse",
-      },
-    ],
-    documents: [
-      {
-        id: "1",
-        name: "Driver's License",
-        url: "/path/to/license.pdf",
-      },
-      {
-        id: "2",
-        name: "Work Authorization",
-        url: "/path/to/work-authorization.pdf",
-      },
-    ],
-  };
-
-  const [personalInfo, setPersonalInfo] = useState(initialData);
-  const [tempData, setTempData] = useState(initialData);
+  const [personalInfo, setPersonalInfo] = useState(null);
+  const [tempData, setTempData] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPersonalInfo = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get("http://localhost:3000/profileRoutes/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setPersonalInfo(response.data.profile);
+        setTempData(response.data.profile);
+      } catch (err) {
+        setError("Failed to fetch personal information.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPersonalInfo();
+  }, []);
 
   const toggleEditMode = () => {
     if (!editMode) {
-      setTempData(personalInfo); // Save current state to temp
+      setTempData(personalInfo);
     }
     setEditMode(!editMode);
   };
 
   const handleCancel = () => {
-    setConfirmDiscard(true); // Open confirmation dialog
+    setConfirmDiscard(true);
   };
 
   const confirmDiscardChanges = (discard) => {
     if (discard) {
-      setPersonalInfo(tempData); // Revert changes
+      setTempData(personalInfo);
     }
     setConfirmDiscard(false);
     setEditMode(false);
   };
 
-  const handleSave = () => {
-    setPersonalInfo(tempData); // Save changes to main state
-    setEditMode(false);
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.put(
+        "http://localhost:3000/profileRoutes/profile",
+        tempData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setPersonalInfo(tempData);
+      setEditMode(false);
+    } catch (err) {
+      console.error("Failed to save personal information:", err);
+      setError("Failed to save changes. Please try again.");
+    }
   };
 
   const renderEditableSection = (label, value, keyPath) => (
@@ -121,10 +113,27 @@ const PersonalInformationPage = () => {
           }
         />
       ) : (
-        <Typography>{value}</Typography>
+        <Typography>{value || "N/A"}</Typography>
       )}
     </Box>
   );
+
+  if (loading) {
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <CircularProgress />
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ maxWidth: "800px", margin: "auto", p: 3 }}>
@@ -167,7 +176,7 @@ const PersonalInformationPage = () => {
           {/* Profile Picture */}
           <Box sx={{ textAlign: "center", mt: 3 }}>
             <Avatar
-              src={personalInfo.avatar}
+              src={personalInfo.avatar || "https://via.placeholder.com/150/0000FF/FFFFFF?text=Avatar"}
               sx={{ width: 100, height: 100, margin: "auto" }}
             />
             <Typography variant="body1">Profile Picture</Typography>
@@ -193,6 +202,40 @@ const PersonalInformationPage = () => {
           {renderEditableSection("State", tempData.address.state, "address.state")}
           {renderEditableSection("ZIP", tempData.address.zip, "address.zip")}
 
+          {/* Residency Section */}
+          <Typography variant="h6" sx={{ mt: 3 }}>
+            Residency
+          </Typography>
+          {renderEditableSection(
+            "Permanent Resident or Citizen",
+            tempData.residency.isPermanentResidentOrCitizen ? "Yes" : "No",
+            "residency.isPermanentResidentOrCitizen"
+          )}
+          {renderEditableSection("Residency Status", tempData.residency.status, "residency.status")}
+          <Typography variant="subtitle1" sx={{ mt: 2 }}>
+            Work Authorization
+          </Typography>
+          {renderEditableSection(
+            "Visa Type",
+            tempData.residency.workAuthorization.visaType,
+            "residency.workAuthorization.visaType"
+          )}
+          {renderEditableSection(
+            "Other Visa Title",
+            tempData.residency.workAuthorization.otherVisaTitle,
+            "residency.workAuthorization.otherVisaTitle"
+          )}
+          {renderEditableSection(
+            "Start Date",
+            tempData.residency.workAuthorization.startDate,
+            "residency.workAuthorization.startDate"
+          )}
+          {renderEditableSection(
+            "End Date",
+            tempData.residency.workAuthorization.endDate,
+            "residency.workAuthorization.endDate"
+          )}
+
           {/* Contact Info Section */}
           <Typography variant="h6" sx={{ mt: 3 }}>
             Contact Info
@@ -200,27 +243,64 @@ const PersonalInformationPage = () => {
           {renderEditableSection("Cell Phone", tempData.contactInfo.cellPhone, "contactInfo.cellPhone")}
           {renderEditableSection("Work Phone", tempData.contactInfo.workPhone, "contactInfo.workPhone")}
 
-          {/* Employment Section */}
-          <Typography variant="h6" sx={{ mt: 3 }}>
-            Employment
-          </Typography>
-          {renderEditableSection("Visa Title", tempData.employment.visaTitle, "employment.visaTitle")}
-          {renderEditableSection("Start Date", tempData.employment.startDate, "employment.startDate")}
-          {renderEditableSection("End Date", tempData.employment.endDate, "employment.endDate")}
-
           {/* Emergency Contact Section */}
           <Typography variant="h6" sx={{ mt: 3 }}>
             Emergency Contact
           </Typography>
           {tempData.emergencyContacts.map((contact, index) => (
             <Box key={index} sx={{ mb: 2 }}>
-              {renderEditableSection("First Name", contact.firstName, `emergencyContacts.${index}.firstName`)}
-              {renderEditableSection("Last Name", contact.lastName, `emergencyContacts.${index}.lastName`)}
+              {renderEditableSection("First Name", contact.name.firstName, `emergencyContacts.${index}.name.firstName`)}
+              {renderEditableSection("Last Name", contact.name.lastName, `emergencyContacts.${index}.name.lastName`)}
               {renderEditableSection("Phone", contact.phone, `emergencyContacts.${index}.phone`)}
               {renderEditableSection("Email", contact.email, `emergencyContacts.${index}.email`)}
               {renderEditableSection("Relationship", contact.relationship, `emergencyContacts.${index}.relationship`)}
+              {editMode && (
+                <IconButton
+                  onClick={() =>
+                    setTempData((prev) => ({
+                      ...prev,
+                      emergencyContacts: prev.emergencyContacts.filter((_, idx) => idx !== index),
+                    }))
+                  }
+                >
+                  <DeleteIcon />
+                </IconButton>
+              )}
             </Box>
           ))}
+          {editMode && (
+            <Button
+              startIcon={<AddIcon />}
+              variant="contained"
+              onClick={() =>
+                setTempData((prev) => ({
+                  ...prev,
+                  emergencyContacts: [
+                    ...prev.emergencyContacts,
+                    {
+                      name: { firstName: "", lastName: "", middleName: "" },
+                      phone: "",
+                      email: "",
+                      relationship: "",
+                    },
+                  ],
+                }))
+              }
+            >
+              Add Emergency Contact
+            </Button>
+          )}
+
+          {/* Reference Section */}
+          <Typography variant="h6" sx={{ mt: 3 }}>
+            Reference
+          </Typography>
+          {renderEditableSection("First Name", tempData.reference.name.firstName, "reference.name.firstName")}
+          {renderEditableSection("Last Name", tempData.reference.name.lastName, "reference.name.lastName")}
+          {renderEditableSection("Middle Name", tempData.reference.name.middleName, "reference.name.middleName")}
+          {renderEditableSection("Phone", tempData.reference.phone, "reference.phone")}
+          {renderEditableSection("Email", tempData.reference.email, "reference.email")}
+          {renderEditableSection("Relationship", tempData.reference.relationship, "reference.relationship")}
 
           {/* Documents Section */}
           <Typography variant="h6" sx={{ mt: 3 }}>
@@ -239,6 +319,40 @@ const PersonalInformationPage = () => {
               </Box>
             </Box>
           ))}
+          {editMode && (
+            <Button
+              variant="contained"
+              component="label"
+            >
+              Upload Document
+              <input
+                type="file"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const formData = new FormData();
+                    formData.append("document", file);
+                    axios
+                      .post("http://localhost:3000/profileRoutes/uploadDocument", formData, {
+                        headers: {
+                          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                        },
+                      })
+                      .then((res) => {
+                        setTempData((prev) => ({
+                          ...prev,
+                          documents: [...prev.documents, res.data],
+                        }));
+                      })
+                      .catch((err) => {
+                        console.error("Failed to upload document:", err);
+                      });
+                  }
+                }}
+              />
+            </Button>
+          )}
 
           {/* Confirmation Dialog */}
           <Dialog open={confirmDiscard} onClose={() => setConfirmDiscard(false)}>
