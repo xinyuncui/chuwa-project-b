@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { baseUrl } from "./service";
 import { setUser, setAuthenticated, logout } from "../redux/authSlice";
-// handle page refersh, token validation and sesseion management
+
 const TokenValidator = () => {
-  console.log("refersh");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
   const checkLoginStatus = async () => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -25,40 +27,39 @@ const TokenValidator = () => {
         );
 
         const data = response.data;
+        console.log("Token validation response:", data);
 
         if (data.valid) {
           // dispatch user data to redux
-          dispatch(setUser(data.user));
+          dispatch(setUser({ user: data.user, token }));
           dispatch(setAuthenticated(true));
         } else {
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("user");
-          // dispatch, clear user in redux store
-          dispatch(logout());
-          navigate("/login"); // Redirect
+          handleLogout();
         }
       } catch (err) {
         console.error("Error verifying token:", err);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("user");
-        navigate("/login"); // Redirect
-        // dispatch, clear user in redux store
-        //-----code----
+        handleLogout();
       }
     } else {
-      navigate("/login"); // Redirect
+      handleLogout();
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    dispatch(logout());
+    navigate("/login");
+  };
+
   useEffect(() => {
-    checkLoginStatus();
-  }, [dispatch]);
+    if (!isAuthenticated) {
+      console.log("Running TokenValidator...");
+      checkLoginStatus();
+    }
+  }, [isAuthenticated, dispatch]);
 
-  //   if (loading) {
-  //     return <div>Loading...</div>;
-  //   }
-
-  return null; // This component doesn't render anything once done
+  return null; // This component doesn't render anything
 };
 
 export default TokenValidator;

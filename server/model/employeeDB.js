@@ -1,71 +1,65 @@
-// 引入 mongoose
 import mongoose from "mongoose";
 
-// 用户的个人信息子Schema
 const profileSchema = new mongoose.Schema({
   name: {
-    firstName: { type: String, required: true }, 
-    lastName: { type: String, required: true }, 
-    middleName: { type: String },              
-    preferredName: { type: String },            
+    firstName: { type: String, default: "" }, 
+    lastName: { type: String, default: "" },
+    middleName: { type: String, default: "" },
+    preferredName: { type: String, default: "" },
   },
-  avatar: { type: String, default: "" },         // Profile picture (optional)
+  avatar: { type: String, default: "" }, 
   address: {
-    building: { type: String },                  
-    street: { type: String },                   
-    city: { type: String },                    
-    state: { type: String },                     
-    zip: { type: String },                       
+    building: { type: String, default: "" },
+    street: { type: String, default: "" },
+    city: { type: String, default: "" },
+    state: { type: String, default: "" },
+    zip: { type: String, default: "" },
   },
   contactInfo: {
-    cellPhone: { type: String, required: true }, // Cell phone number (required)
-    workPhone: { type: String },                
+    cellPhone: { type: String, default: "" },
+    workPhone: { type: String, default: "" },
   },
-  email: { type: String, required: true },       // Email (required, pre-filled at registration)
-  ssn: { type: String, required: true },         // SSN (required)
-  birthDate: { type: Date, required: true },     // Date of birth (required)
-  gender: {
-    type: String,
-    enum: ["Male", "Female", "I do not wish to answer"], // Gender (required)
-    required: true,
-  },
-  residency: {                                    
-    isPermanentResidentOrCitizen: { type: Boolean, required: true }, 
-    status: {                                     
-      type: String,
-      enum: ["Green Card", "Citizen"],
-    },
-    workAuthorization: {                          
-      visaType: {                                 
-        type: String,
-        enum: ["H1-B", "L2", "F1(CPT/OPT)", "H4", "Other"],
-      },
-      optReceipt: { type: mongoose.Schema.Types.ObjectId, ref: "Document" }, // Reference to OPT Receipt document
-      otherVisaTitle: { type: String },           
-      startDate: { type: Date },                 
-      endDate: { type: Date },                    
+  email: { type: String, default: "" },
+  ssn: { type: String, default: "" },
+  birthDate: { type: String, default: "" },
+  gender: { type: String, default: "" },
+  residency: {
+    isPermanentResidentOrCitizen: { type: Boolean, default: false },
+    status: { type: String, default: "" },
+    workAuthorization: {
+      visaType: { type: String, default: "" },
+      optReceipt: { type: mongoose.Schema.Types.ObjectId, ref: "Document" },
+      otherVisaTitle: { type: String, default: "" },
+      startDate: { type: String, default: "" },
+      endDate: { type: String, default: "" },
     },
   },
-  reference: {                                  
+  reference: {
     name: {
-      firstName: { type: String, required: true }, // First name (required)
-      lastName: { type: String, required: true },  // Last name (required)
-      middleName: { type: String },               // Middle name (optional)
+      firstName: { type: String, default: "" },
+      lastName: { type: String, default: "" },
+      middleName: { type: String, default: "" },
     },
-    phone: { type: String, required: true },       
-    email: { type: String, required: true },       
-    relationship: { type: String, required: true }, 
+    phone: { type: String, default: "" },
+    email: { type: String, default: "" },
+    relationship: { type: String, default: "" },
   },
-  emergencyContacts: [                          
+  emergencyContacts: [
     {
       name: {
-        firstName: { type: String, required: true }, 
-        lastName: { type: String, required: true },  
-        middleName: { type: String },            
+        firstName: { type: String, default: "" },
+        lastName: { type: String, default: "" },
+        middleName: { type: String, default: "" },
       },
-      phone: { type: String, required: true },       
-      email: { type: String },                     
-      relationship: { type: String, required: true }, 
+      phone: { type: String, default: "" },
+      email: { type: String, default: "" },
+      relationship: { type: String, default: "" },
+    },
+  ],
+  documents: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Document",
     },
   ],
 });
@@ -76,7 +70,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       required: true,
-      match: [/\S+@\S+\.\S+/, "Please enter a valid email address"], // Email format validation
+      match: [/\S+@\S+\.\S+/, "Please enter a valid email address"],
     },
     username: {
       type: String,
@@ -86,7 +80,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: [6, "Password must be at least 6 characters"], // Password length validation
+      minlength: [6, "Password must be at least 6 characters"],
     },
     role: {
       type: String,
@@ -94,16 +88,65 @@ const userSchema = new mongoose.Schema(
       default: "EMPLOYEE",
     },
     onboardingApplication: {
-      type: mongoose.Schema.Types.ObjectId, // Reference to onboarding application
+      type: mongoose.Schema.Types.ObjectId,
       ref: "OnboardingApplication",
     },
     documents: [
       {
-        type: mongoose.Schema.Types.ObjectId, // Reference to document
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Document",
       },
     ],
-    profile: profileSchema, 
+    profile: {
+      type: profileSchema,
+      default: {
+        name: {
+          firstName: "",
+          lastName: "",
+          middleName: "",
+          preferredName: "",
+        },
+        avatar: "",
+        address: {
+          building: "",
+          street: "",
+          city: "",
+          state: "",
+          zip: "",
+        },
+        contactInfo: {
+          cellPhone: "",
+          workPhone: "",
+        },
+        email: "",
+        ssn: "",
+        birthDate: "",
+        gender: "",
+        residency: {
+          isPermanentResidentOrCitizen: false,
+          status: "",
+          workAuthorization: {
+            visaType: "",
+            optReceipt: null,
+            otherVisaTitle: "",
+            startDate: "",
+            endDate: "",
+          },
+        },
+        reference: {
+          name: {
+            firstName: "",
+            lastName: "",
+            middleName: "",
+          },
+          phone: "",
+          email: "",
+          relationship: "",
+        },
+        emergencyContacts: [],
+        documents: [],
+      },
+    },
   },
   { timestamps: true }
 );
