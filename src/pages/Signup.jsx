@@ -16,7 +16,6 @@ import { baseUrl } from "../utils/service";
 
 const SignUp = () => {
   const navigate = useNavigate();
-
   const { token } = useParams(); // extract token from frontend url
   const [formData, setFormData] = useState({
     email: "",
