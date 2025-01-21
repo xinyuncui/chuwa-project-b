@@ -9,10 +9,8 @@ export const jwtVerify = async (req, res, next) => {
 
   if (authHeader.startsWith("Bearer ")) {
     const token = authHeader.split(" ")[1];
-    console.log("Received Token:", token);
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-      console.log("Decoded Token:", decoded);
       req.employee = decoded.employee;
       next();
     } catch (err) {
