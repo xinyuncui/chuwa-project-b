@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -9,13 +9,15 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import { logout } from "../redux/authSlice"; // Update with your actual logout action path
+import { logout } from "../redux/authSlice";
 
-const NavBar = ({ isLoggedIn }) => {
+const NavBar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [userRole, setUserRole] = useState(null);
+
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -33,13 +35,9 @@ const NavBar = ({ isLoggedIn }) => {
     navigate("/");
   };
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      setUserRole(user.role);
-      console.log(userRole);
-    }
-  }, [userRole]);
+  // 根据业务需求，如果你还想要区分是否登录，可以直接用 isAuthenticated。
+  // 不需要再从外面传入 isLoggedIn
+  // const isLoggedIn = isAuthenticated;
 
   return (
     <AppBar position="static">
@@ -47,8 +45,9 @@ const NavBar = ({ isLoggedIn }) => {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Dashboard
         </Typography>
-        {isLoggedIn ? (
-          userRole === "EMPLOYEE" ? (
+
+        {isAuthenticated ? (
+          user?.role === "EMPLOYEE" ? (
             <>
               <IconButton
                 edge="start"
@@ -64,10 +63,20 @@ const NavBar = ({ isLoggedIn }) => {
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
               >
-                <MenuItem onClick={handleMenuClose}>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose(); 
+                    navigate("/personal-information"); 
+                  }}
+                >
                   Personal Information
                 </MenuItem>
-                <MenuItem onClick={handleMenuClose}>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose(); 
+                    navigate("/visa-status-management"); 
+                  }}
+                >
                   Visa Status Management
                 </MenuItem>
                 <MenuItem
@@ -98,9 +107,6 @@ const NavBar = ({ isLoggedIn }) => {
                 onClose={handleMenuClose}
               >
                 <MenuItem onClick={handleMenuClose}>Home</MenuItem>
-                {/* <MenuItem onClick={() => navigate("/hr-send-email")}>
-                  Send Regisration Link
-                </MenuItem> */}
                 <MenuItem onClick={() => navigate("/employee-profile")}>
                   Employee Profiles
                 </MenuItem>
@@ -123,12 +129,7 @@ const NavBar = ({ isLoggedIn }) => {
             </>
           )
         ) : (
-          <Button
-            color="inherit"
-            onClick={() => {
-              navigate("/login");
-            }}
-          >
+          <Button color="inherit" onClick={() => navigate("/login")}>
             Login
           </Button>
         )}
