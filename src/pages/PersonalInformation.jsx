@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Button,
@@ -22,8 +23,11 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
+import { updateProfile } from "../redux/authSlice";
 
 const PersonalInformationPage = () => {
+  const dispatch = useDispatch();
+  const userProfile = useSelector((state) => state.auth.user?.profile);
   const [personalInfo, setPersonalInfo] = useState(null);
   const [tempData, setTempData] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -47,6 +51,7 @@ const PersonalInformationPage = () => {
           }
         );
         setPersonalInfo(response.data.profile);
+
         setTempData(response.data.profile);
       } catch (err) {
         setError("Failed to fetch personal information.");
@@ -157,6 +162,9 @@ const PersonalInformationPage = () => {
           "Content-Type": "application/json",
         },
       });
+      // Dispatch updateProfile to update Redux state
+      dispatch(updateProfile({ updatedProfile: tempData }));
+
       setPersonalInfo(tempData);
       setEditMode(false);
       // Clear errors when saved successfully
