@@ -4,6 +4,7 @@ import {
   updatePersonalInfo,
   uploadDocument,
   getAllPersonalInfo,
+
 } from "../controller/profileController.js";
 import { jwtVerify } from "../middleware/auth.js";
 import multer from "multer";
@@ -44,9 +45,11 @@ router.post(
   uploadDocument
 );
 
+
 // GET all personal info
 router.get("/all-user", jwtVerify, getAllPersonalInfo);
 
 // DELETE a user
 
 export default router;
+

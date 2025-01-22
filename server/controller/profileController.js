@@ -13,6 +13,7 @@ export const getPersonalInfo = async (req, res) => {
 
     res.status(200).json({ profile: user.profile });
   } catch (error) {
+
     res.status(500).json({
       message: `Error fetching personal information: ${error.message}`,
     });
@@ -54,9 +55,9 @@ export const getAllPersonalInfo = async (req, res) => {
       currentPage: Number(page),
     });
   } catch (error) {
-    res.status(500).json({
-      message: `Error fetching all personal information: ${error.message}`,
-    });
+
+    res.status(500).json({ message: `Error fetching personal information: ${error.message}` });
+
   }
 };
 
@@ -77,13 +78,10 @@ export const updatePersonalInfo = async (req, res) => {
     user.profile = updatedProfile; // Update the profile field with new data
     await user.save(); // Save the updated user document
 
-    res
-      .status(200)
-      .json({ message: "Profile updated successfully", profile: user.profile });
+
+    res.status(200).json({ message: "Profile updated successfully", profile: user.profile });
   } catch (error) {
-    res.status(500).json({
-      message: `Error updating personal information: ${error.message}`,
-    });
+    res.status(500).json({ message: `Error updating personal information: ${error.message}` });
   }
 };
 
@@ -97,23 +95,21 @@ export const uploadDocument = async (req, res) => {
 
     if (!req.file) {
       // If multer didn't receive any file or fileFilter blocked it
-      return res
-        .status(400)
-        .json({ message: "No file uploaded or invalid file type." });
+
+      return res.status(400).json({ message: "No file uploaded or invalid file type." });
     }
 
     // Optional: get doc type, step from req.body or set defaults
     const docType = req.body.type || "OPT Receipt";
     const step = req.body.step || "OPT Receipt";
 
-    // If you want to link to an existing OnboardingApplication,
-    // you might pass an "applicationId" in req.body, or do "findOne({ user: userId })"
+    // If you want to link to an existing OnboardingApplication, 
+    // you might pass an "applicationId" in req.body, or do "findOne({ user: userId })" 
     // Below is an example approach:
     let onboardingApp = null;
     if (req.body.applicationId) {
-      onboardingApp = await OnboardingApplication.findById(
-        req.body.applicationId
-      );
+      onboardingApp = await OnboardingApplication.findById(req.body.applicationId);
+
     } else {
       // or auto-create one for the user if none found
       onboardingApp = await OnboardingApplication.findOne({ user: userId });
@@ -159,4 +155,6 @@ export const uploadDocument = async (req, res) => {
     console.error("Error in uploadDocument:", error);
     return res.status(500).json({ message: error.message });
   }
+
 };
+

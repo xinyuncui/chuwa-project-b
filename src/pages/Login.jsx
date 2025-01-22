@@ -31,7 +31,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
+  
     try {
       // Send login request to the backend
       const response = await axios.post(`${baseUrl}/auth/login`, {
@@ -39,7 +39,9 @@ const Login = () => {
         password,
       });
 
+
       const { token, user } = response.data; // Extract token and user details from response
+
 
       // Save the token and user details to localStorage
       localStorage.setItem("authToken", token);
@@ -49,9 +51,11 @@ const Login = () => {
         user: JSON.parse(localStorage.getItem("user")),
       });
 
+  
       // Dispatch user details and authentication status to Redux
       dispatch(setUser({ user, token }));
       dispatch(setAuthenticated(true));
+  
 
       // Redirect based on the user's role
       if (user.role === "HR") {

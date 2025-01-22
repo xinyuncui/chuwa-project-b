@@ -41,14 +41,15 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log("login request received");
+    console.log("Login request received");
+
     let employee = await User.findOne({ username: username });
 
     if (!employee) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    if (employee.password != password) {
+    if (employee.password !== password) {
       return res.status(400).json({ message: "Incorrect password" });
     }
 
@@ -57,22 +58,26 @@ export const login = async (req, res) => {
         id: employee._id,
         username: employee.username,
         email: employee.email,
+        role: employee.role, // Include role in the payload
       },
     };
+
 
     const token = await jwt.sign(payload, process.env.JWT_SECRET_KEY, {
       expiresIn: "1d",
     });
 
+
     const { password: _, ...safeEmployee } = employee.toObject();
 
+
     res.status(200).json({
-      token: token,
-      user: safeEmployee, // Exclude the password field
-      message: "login successfully",
+      token: token, // Return the token
+      user: safeEmployee, // Include user details (excluding password)
+      message: "Login successfully",
     });
   } catch (err) {
-    res.status(500).json({ message: `server error: ${err.message}` });
+    res.status(500).json({ message: `Server error: ${err.message}` });
   }
 };
 
@@ -89,3 +94,4 @@ export const refreshPage = (req, res) => {
     return res.status(401).json({ valid: false, message: err });
   }
 };
+

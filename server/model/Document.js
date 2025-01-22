@@ -1,57 +1,64 @@
-// Import mongoose
+// server/model/Document.js
 import mongoose from "mongoose";
 
-// Schema for Document
 const documentSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      required: true, // Document type (e.g., OPT Receipt, OPT EAD, etc.)
+      required: true, // e.g. "OPT Receipt" or "Resume"
     },
     uploadedBy: {
-      type: mongoose.Schema.Types.ObjectId, // Reference to the User model
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     relatedTo: {
-      type: mongoose.Schema.Types.ObjectId, // Reference to OnboardingApplication model
+      type: mongoose.Schema.Types.ObjectId,
       ref: "OnboardingApplication",
       required: true,
     },
     status: {
       type: String,
-      enum: ["Pending", "Approved", "Rejected"], // Current document status
+      enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
       required: true,
     },
     step: {
-      type: String, // Step of the visa process (e.g., OPT Receipt)
-      required: true,
+      type: String, 
+      required: true, 
     },
     feedback: {
-      type: String, // Feedback from HR for the document
+      type: String,
       default: "",
     },
     uploadDate: {
-      type: Date, // Date when the document was uploaded
+      type: Date,
       required: true,
+    },
+    // === New fields to store file data directly in MongoDB
+    fileData: {
+      type: Buffer, // store binary data
+      required: false, // or true if always must have data
+    },
+    fileContentType: {
+      type: String,
+      required: false,
     },
     versionHistory: [
       {
-        version: { type: Number, required: true }, // Version number of the document
+        version: { type: Number, required: true },
         status: {
           type: String,
-          enum: ["Pending", "Approved", "Rejected"], // Status of the version
+          enum: ["Pending", "Approved", "Rejected"],
         },
-        feedback: { type: String }, // Feedback for the version
-        uploadDate: { type: Date, required: true }, // Upload date of the version
+        feedback: { type: String },
+        uploadDate: { type: Date, required: true },
       },
     ],
   },
-  { timestamps: true } // Automatically manage createdAt and updatedAt fields
+  { timestamps: true }
 );
 
-// Create Document model
 const Document = mongoose.model("Document", documentSchema);
 
 export default Document;
