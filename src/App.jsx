@@ -10,6 +10,7 @@ import PersonalInformationPage from "./pages/PersonalInformation";
 import HireManagement from "./pages/HR/HireManagement";
 import ErrorPage from "./pages/ErrorPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EmployeeSummary from "./pages/HR/EmployeeProfile";
 function App() {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
@@ -40,6 +41,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRole={"HR"}>
                   <HireManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employee-profile"
+              element={
+                <ProtectedRoute allowedRole={"HR"}>
+                  <EmployeeSummary />
                 </ProtectedRoute>
               }
             />

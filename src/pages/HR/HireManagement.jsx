@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   TextField,
@@ -12,50 +13,21 @@ import {
   TableRow,
   Paper,
   CircularProgress,
+  Dialog,
 } from "@mui/material";
 import axios from "axios";
 import { baseUrl } from "../../utils/service";
 
 const HireManagement = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [history, setHistory] = useState([]);
+  const [pendingApplications, setPendingApplications] = useState([]);
+  const [approvedApplications, setApprovedApplications] = useState([]);
+  const [rejectedApplications, setRejectedApplications] = useState([]);
 
-  //   const history = [
-  //     {
-  //       email: "john.doe@example.com",
-  //       link: "http://example.",
-  //       status: "unsubmitted",
-  //     },
-  //     {
-  //       email: "jane.doe@example.com",
-  //       link: "http://example.",
-  //       status: "submitted",
-  //     },
-  //     {
-  //       email: "jack.doe@example.com",
-  //       link: "http://example.",
-  //       status: "submitted",
-  //     },
-  //     {
-  //       email: "john.doe@example.com",
-  //       link: "http://example.",
-  //       status: "unsubmitted",
-  //     },
-  //     {
-  //       email: "jane.doe@example.com",
-  //       link: "http://example.",
-  //       status: "submitted",
-  //     },
-  //     {
-  //       email: "jack.doe@example.com",
-  //       link: "http://example.",
-  //       status: "submitted",
-  //     },
-  //   ];
-
-  // fetch backend api
   const fetchHistory = async () => {
     setFetching(true);
     console.log("start to fetch");
@@ -79,9 +51,35 @@ const HireManagement = () => {
       setFetching(false);
     }
   };
+  const fetchApplication = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/applications`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      const {
+        pendingApplications,
+        approvedApplications,
+        rejectedApplications,
+      } = response.data;
+      console.log(
+        pendingApplications,
+        approvedApplications,
+        rejectedApplications
+      );
+      setPendingApplications(pendingApplications);
+      setApprovedApplications(approvedApplications);
+      setRejectedApplications(rejectedApplications);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to fetch applications:", e.message);
+    }
+  };
   // fetch history on component mount
   useEffect(() => {
     fetchHistory();
+    fetchApplication();
   }, []);
 
   // handle send email link
@@ -134,6 +132,7 @@ const HireManagement = () => {
         sx={{
           maxHeight: 300, // Fixed height for scrollable area
           overflowY: "auto",
+          mb: 3,
         }}
       >
         <Table stickyHeader>
@@ -181,8 +180,204 @@ const HireManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      {/* Pending Applications */}
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Pending Applications
+      </Typography>
+      <TableContainer
+        component={Paper}
+        sx={{ maxHeight: 300, overflowY: "auto", mb: 3 }}
+      >
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: "33%" }}>Full Name</TableCell>
+              <TableCell sx={{ width: "33%" }}>Email</TableCell>
+              <TableCell sx={{ width: "34%" }}>Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {fetching ? (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  <CircularProgress size={24} />
+                </TableCell>
+              </TableRow>
+            ) : pendingApplications.length > 0 ? (
+              pendingApplications.map((app) => (
+                <TableRow key={app._id}>
+                  <TableCell sx={{ width: "33%" }}>
+                    {app.user.profile.name.firstName +
+                      app.user.profile.name.lastName}
+                  </TableCell>
+                  <TableCell sx={{ width: "33%" }}>{app.user.email}</TableCell>
+                  <TableCell sx={{ width: "34%" }}>
+                    <Button variant="contained" onClick={() => navigate("/")}>
+                      View Application
+                    </Button>
+                    {/* <Button onClick={() => handleApprove(app.id)}>Approve</Button>
+                    <Button onClick={() => handleOpenFeedbackDialog(app)}>
+                      Reject
+                    </Button> */}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  No pending applications
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Approved Applications */}
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Approved Applications
+      </Typography>
+      <TableContainer
+        component={Paper}
+        sx={{ maxHeight: 300, overflowY: "auto", mb: 3 }}
+      >
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: "33%" }}>Full Name</TableCell>
+              <TableCell sx={{ width: "33%" }}>Email</TableCell>
+              <TableCell sx={{ width: "33%" }}>Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {approvedApplications.length > 0 ? (
+              approvedApplications.map((app) => (
+                <TableRow key={app._id}>
+                  <TableCell sx={{ width: "33%" }}>
+                    {app.user.profile.name.firstName +
+                      app.user.profile.name.lastName}
+                  </TableCell>
+                  <TableCell sx={{ width: "33%" }}>{app.user.email}</TableCell>
+                  <TableCell sx={{ width: "34%" }}>
+                    <Button variant="contained" disabled>
+                      View Application
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  No approved applications
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Rejected Applications */}
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Rejected Applications
+      </Typography>
+      <TableContainer
+        component={Paper}
+        sx={{ maxHeight: 300, overflowY: "auto", mb: 3 }}
+      >
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: "33%" }}>Full Name</TableCell>
+              <TableCell sx={{ width: "33%" }}>Email</TableCell>
+              <TableCell sx={{ width: "34%" }}>Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rejectedApplications.length > 0 ? (
+              rejectedApplications.map((app) => (
+                <TableRow key={app._id}>
+                  <TableCell sx={{ width: "33%" }}>
+                    {app.user.profile.name.firstName +
+                      app.user.profile.name.lastName}
+                  </TableCell>
+                  <TableCell sx={{ width: "33%" }}>{app.user.email}</TableCell>
+                  <TableCell sx={{ width: "34%" }}>
+                    <Button variant="contained" disabled>
+                      View Application
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  No rejected applications
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Feedback Dialog */}
+      {/* <Dialog open={openFeedbackDialog} onClose={handleCloseFeedbackDialog}>
+        <DialogTitle>Provide Feedback</DialogTitle>
+        <DialogContent>
+          <TextareaAutosize
+            minRows={3}
+            placeholder="Provide feedback"
+            style={{ width: "100%" }}
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseFeedbackDialog}>Cancel</Button>
+          <Button
+            onClick={() => handleReject(selectedApplication.id)}
+            color="secondary"
+            disabled={!feedback}
+          >
+            Reject
+          </Button>
+        </DialogActions>
+      </Dialog> */}
     </Box>
   );
 };
 
 export default HireManagement;
+//   const history = [
+//     {
+//       email: "john.doe@example.com",
+//       link: "http://example.",
+//       status: "unsubmitted",
+//     },
+//     {
+//       email: "jane.doe@example.com",
+//       link: "http://example.",
+//       status: "submitted",
+//     },
+//     {
+//       email: "jack.doe@example.com",
+//       link: "http://example.",
+//       status: "submitted",
+//     },
+//     {
+//       email: "john.doe@example.com",
+//       link: "http://example.",
+//       status: "unsubmitted",
+//     },
+//     {
+//       email: "jane.doe@example.com",
+//       link: "http://example.",
+//       status: "submitted",
+//     },
+//     {
+//       email: "jack.doe@example.com",
+//       link: "http://example.",
+//       status: "submitted",
+//     },
+//   ];
+
+// fetch backend api

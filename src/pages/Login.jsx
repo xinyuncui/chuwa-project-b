@@ -28,7 +28,7 @@ const Login = () => {
     setShowPassword((prev) => !prev); // Toggle password visibility
   };
 
-  const handleSubmit = async (e, formData) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
@@ -39,22 +39,27 @@ const Login = () => {
         password,
       });
 
-      const { token, user } = response.data; // Backend should return token and user info
+      const { token, user } = response.data; // Extract token and user details from response
 
-      // Save the token to localStorage
+      // Save the token and user details to localStorage
       localStorage.setItem("authToken", token);
       localStorage.setItem("user", JSON.stringify(user));
+      console.log("Stored in localStorage:", {
+        authToken: token,
+        user: JSON.parse(localStorage.getItem("user")),
+      });
 
-      // Dispatch user info to Redux store
-      dispatch(setUser(user));
+      // Dispatch user details and authentication status to Redux
+      dispatch(setUser({ user, token }));
       dispatch(setAuthenticated(true));
-      console.log("login success");
 
-      // if application status is approved, redirect to homepage, otherwise redirect to onboarding application page
-      if (user.role === "EMPLOYEE") {
-        navigate("/personal-information");
-      } else if (user.role === "HR") {
+      // Redirect based on the user's role
+      if (user.role === "HR") {
         navigate("/hiring-management");
+      } else if (user.role === "EMPLOYEE") {
+        navigate("/personal-information");
+      } else {
+        navigate("/error");
       }
     } catch (err) {
       console.error("Login failed:", err);

@@ -61,10 +61,9 @@ export const login = async (req, res) => {
     };
 
     const token = await jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-      expiresIn: "1h",
+      expiresIn: "1d",
     });
 
-    // Exclude the password field
     const { password: _, ...safeEmployee } = employee.toObject();
 
     res.status(200).json({
