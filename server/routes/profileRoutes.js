@@ -4,7 +4,7 @@ import {
   updatePersonalInfo,
   uploadDocument,
   getAllPersonalInfo,
-
+  getProfile,
 } from "../controller/profileController.js";
 import { jwtVerify } from "../middleware/auth.js";
 import multer from "multer";
@@ -33,6 +33,7 @@ const router = Router();
 
 // GET personal info
 router.get("/profile", jwtVerify, getPersonalInfo);
+router.get("/profile/:id", jwtVerify, getProfile);
 
 // PUT update personal info
 router.put("/profile", jwtVerify, updatePersonalInfo);
@@ -45,11 +46,9 @@ router.post(
   uploadDocument
 );
 
-
 // GET all personal info
 router.get("/all-user", jwtVerify, getAllPersonalInfo);
 
 // DELETE a user
 
 export default router;
-

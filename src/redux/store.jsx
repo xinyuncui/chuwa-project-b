@@ -1,11 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
+import applicationReducer from "./applicationStatusSlice";
+// import historyReducer from "./registrationHistorySlice";
 
 const store = configureStore({
   reducer: {
     auth: authReducer, // Add the auth slice
-    // onboarding: onboardingReducer, 
-    // visaStatus: visaStatusReducer, 
+    applicationStatus: applicationReducer, // onboarding: onboardingReducer,
+    // registrationHistory: historyReducer, // registrationHistorySlice
+    // visaStatus: visaStatusReducer,
     // hrManagement: hrManagementReducer,
   },
 });

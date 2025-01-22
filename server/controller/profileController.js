@@ -15,6 +15,27 @@ export const getPersonalInfo = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+
+    res.status(200).json({ profile: user.profile });
+  } catch (error) {
+    res.status(500).json({
+      message: `Error fetching personal information: ${error.message}`,
+    });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.params.id; // Extract user ID from the JWT payload added by the middleware
+    const user = await User.findById(userId).select("profile"); // Fetch only the profile field
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ profile: user.profile });
+  } catch (error) {
+
     // 3) Find the user's corresponding OnboardingApplication
     //    - If the OnboardingApplication schema has a field `user: { type: ObjectId, ref: 'User' }`
     //      and you stored the userId while creating it, you can query like this.
@@ -76,7 +97,10 @@ export const getAllPersonalInfo = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ message: `Error fetching personal information: ${error.message}` });
+      .json({
+        message: `Error fetching personal information: ${error.message}`,
+      });
+
   }
 };
 
@@ -111,6 +135,7 @@ export const updatePersonalInfo = async (req, res) => {
       onboardingApp.status = "Pending";
     }
 
+
     // Optional: If you want to set the visaType based on user.profile
     // For example, if your "visaType" is in user.profile.residency.workAuthorization.visaType
     const visaTypeFromProfile =
@@ -143,7 +168,12 @@ export const uploadDocument = async (req, res) => {
 
     // Check if the file is present
     if (!req.file) {
+
+      // If multer didn't receive any file or fileFilter blocked it
+
+
       // If no file or invalid file type
+
       return res
         .status(400)
         .json({ message: "No file uploaded or invalid file type." });
@@ -205,4 +235,6 @@ export const uploadDocument = async (req, res) => {
     console.error("Error in uploadDocument:", error);
     return res.status(500).json({ message: error.message });
   }
+
 };
+
