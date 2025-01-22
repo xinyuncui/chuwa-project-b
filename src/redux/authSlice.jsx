@@ -17,17 +17,19 @@ const authSlice = createSlice({
   reducers: {
     // Set user details, including role and authentication status
     setUser: (state, action) => {
-      console.log("setUser action payload:", action.payload); 
+
+      console.log("setUser action payload:", action.payload);
       const { user, token } = action.payload;
-    
+
       state.user = user;
-      state.role = user.role; 
+      state.role = user.role;
       state.isAuthenticated = !!token;
-  
+
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("authToken", token);
-    
-      console.log("Updated Redux state:", state); 
+
+      console.log("Updated Redux state:", state);
+
     },
 
     // Update only the authentication status
@@ -45,8 +47,23 @@ const authSlice = createSlice({
       localStorage.removeItem("user");
       localStorage.removeItem("authToken");
     },
+
+    // update profile information
+    updateProfile: (state, action) => {
+      console.log("updateProfile action payload:", action.payload);
+      const { updatedProfile } = action.payload;
+
+      if (state.user) {
+        state.user.profile = updatedProfile; // Update user profile if user exists
+        console.log("profile", updatedProfile);
+      } else {
+        console.error("No user found in state to update profile.");
+      }
+
+    },
   },
 });
 
-export const { setUser, setAuthenticated, logout } = authSlice.actions;
+export const { setUser, setAuthenticated, logout, updateProfile } =
+  authSlice.actions;
 export default authSlice.reducer;

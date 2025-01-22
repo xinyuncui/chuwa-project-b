@@ -13,7 +13,51 @@ export const getPersonalInfo = async (req, res) => {
 
     res.status(200).json({ profile: user.profile });
   } catch (error) {
+
+    res.status(500).json({
+      message: `Error fetching personal information: ${error.message}`,
+    });
+  }
+};
+
+/**
+ * Get all information for all users
+ */
+export const getAllPersonalInfo = async (req, res) => {
+  try {
+    // pagination
+    const { page = 1, limit = 10, search = "" } = req.query;
+
+    const query = {
+      role: "EMPLOYEE",
+      $or: [
+        { "profile.name.firstName": { $regex: search, $options: "i" } }, // Search by first name
+        { "profile.name.lastName": { $regex: search, $options: "i" } }, // Search by last name
+        { "profile.name.preferredName": { $regex: search, $options: "i" } }, // Search by preferred
+      ],
+    };
+
+    // Validate pagination inputs
+    if (!Number(page) || !Number(limit)) {
+      return res.status(400).json({ message: "Invalid pagination parameters" });
+    }
+
+    const users = await User.find(query, "-password")
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const totalUsers = await User.countDocuments(query);
+
+    res.status(200).json({
+      users,
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / limit),
+      currentPage: Number(page),
+    });
+  } catch (error) {
+
     res.status(500).json({ message: `Error fetching personal information: ${error.message}` });
+
   }
 };
 
@@ -34,6 +78,7 @@ export const updatePersonalInfo = async (req, res) => {
     user.profile = updatedProfile; // Update the profile field with new data
     await user.save(); // Save the updated user document
 
+
     res.status(200).json({ message: "Profile updated successfully", profile: user.profile });
   } catch (error) {
     res.status(500).json({ message: `Error updating personal information: ${error.message}` });
@@ -50,6 +95,7 @@ export const uploadDocument = async (req, res) => {
 
     if (!req.file) {
       // If multer didn't receive any file or fileFilter blocked it
+
       return res.status(400).json({ message: "No file uploaded or invalid file type." });
     }
 
@@ -63,6 +109,7 @@ export const uploadDocument = async (req, res) => {
     let onboardingApp = null;
     if (req.body.applicationId) {
       onboardingApp = await OnboardingApplication.findById(req.body.applicationId);
+
     } else {
       // or auto-create one for the user if none found
       onboardingApp = await OnboardingApplication.findOne({ user: userId });
@@ -108,4 +155,6 @@ export const uploadDocument = async (req, res) => {
     console.error("Error in uploadDocument:", error);
     return res.status(500).json({ message: error.message });
   }
+
 };
+

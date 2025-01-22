@@ -38,9 +38,11 @@ const Login = () => {
         username,
         password,
       });
-  
+
+
       const { token, user } = response.data; // Extract token and user details from response
-  
+
+
       // Save the token and user details to localStorage
       localStorage.setItem("authToken", token);
       localStorage.setItem("user", JSON.stringify(user));
@@ -48,11 +50,13 @@ const Login = () => {
         authToken: token,
         user: JSON.parse(localStorage.getItem("user")),
       });
+
   
       // Dispatch user details and authentication status to Redux
       dispatch(setUser({ user, token }));
       dispatch(setAuthenticated(true));
   
+
       // Redirect based on the user's role
       if (user.role === "HR") {
         navigate("/hiring-management");

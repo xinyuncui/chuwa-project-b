@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Button,
@@ -22,8 +23,11 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
+import { updateProfile } from "../redux/authSlice";
 
 const PersonalInformationPage = () => {
+  const dispatch = useDispatch();
+  const userProfile = useSelector((state) => state.auth.user?.profile);
   const [personalInfo, setPersonalInfo] = useState(null);
   const [tempData, setTempData] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -38,12 +42,16 @@ const PersonalInformationPage = () => {
     const fetchPersonalInfo = async () => {
       try {
         const token = localStorage.getItem("authToken");
-        const response = await axios.get("http://localhost:3000/profileRoutes/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:3000/profileRoutes/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setPersonalInfo(response.data.profile);
+
         setTempData(response.data.profile);
       } catch (err) {
         setError("Failed to fetch personal information.");
@@ -91,10 +99,12 @@ const PersonalInformationPage = () => {
     }
 
     // Residency logic
-    const isResidentOrCitizen = tempData?.residency?.isPermanentResidentOrCitizen;
+    const isResidentOrCitizen =
+      tempData?.residency?.isPermanentResidentOrCitizen;
     const status = tempData?.residency?.status?.trim();
     const visaType = tempData?.residency?.workAuthorization?.visaType?.trim();
-    const otherVisaTitle = tempData?.residency?.workAuthorization?.otherVisaTitle?.trim();
+    const otherVisaTitle =
+      tempData?.residency?.workAuthorization?.otherVisaTitle?.trim();
     const startDate = tempData?.residency?.workAuthorization?.startDate?.trim();
     const endDate = tempData?.residency?.workAuthorization?.endDate?.trim();
     const optReceipt = tempData?.residency?.workAuthorization?.optReceipt;
@@ -102,7 +112,8 @@ const PersonalInformationPage = () => {
     if (isResidentOrCitizen) {
       // If user is permanent resident or citizen, status must be 'Green Card' or 'Citizen'
       if (!["Green Card", "Citizen"].includes(status)) {
-        errors.status = "If you are a permanent resident or citizen, please select 'Green Card' or 'Citizen'.";
+        errors.status =
+          "If you are a permanent resident or citizen, please select 'Green Card' or 'Citizen'.";
       }
     } else {
       // If user is not permanent resident or citizen, then visaType is mandatory
@@ -113,12 +124,14 @@ const PersonalInformationPage = () => {
       if (visaType === "F1(CPT/OPT)") {
         // If optReceipt is null or undefined, add error
         if (!optReceipt) {
-          errors.optReceipt = "You must upload your OPT receipt if you choose F1(CPT/OPT).";
+          errors.optReceipt =
+            "You must upload your OPT receipt if you choose F1(CPT/OPT).";
         }
       }
       // If visaType is 'Other', otherVisaTitle is mandatory
       if (visaType === "Other" && !otherVisaTitle) {
-        errors.otherVisaTitle = "Please specify your visa title if you choose 'Other'.";
+        errors.otherVisaTitle =
+          "Please specify your visa title if you choose 'Other'.";
       }
       // startDate and endDate are mandatory
       if (!startDate) {
@@ -149,6 +162,9 @@ const PersonalInformationPage = () => {
           "Content-Type": "application/json",
         },
       });
+      // Dispatch updateProfile to update Redux state
+      dispatch(updateProfile({ updatedProfile: tempData }));
+
       setPersonalInfo(tempData);
       setEditMode(false);
       // Clear errors when saved successfully
@@ -171,7 +187,11 @@ const PersonalInformationPage = () => {
               <Typography variant="body2">Select Yes or No</Typography>
               <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
                 <Button
-                  variant={tempData.residency.isPermanentResidentOrCitizen ? "contained" : "outlined"}
+                  variant={
+                    tempData.residency.isPermanentResidentOrCitizen
+                      ? "contained"
+                      : "outlined"
+                  }
                   onClick={() =>
                     setTempData((prev) => ({
                       ...prev,
@@ -185,7 +205,11 @@ const PersonalInformationPage = () => {
                   Yes
                 </Button>
                 <Button
-                  variant={!tempData.residency.isPermanentResidentOrCitizen ? "contained" : "outlined"}
+                  variant={
+                    !tempData.residency.isPermanentResidentOrCitizen
+                      ? "contained"
+                      : "outlined"
+                  }
                   onClick={() =>
                     setTempData((prev) => ({
                       ...prev,
@@ -201,7 +225,8 @@ const PersonalInformationPage = () => {
                 </Button>
               </Box>
             </>
-          ) : keyPath === "residency.status" && tempData.residency.isPermanentResidentOrCitizen ? (
+          ) : keyPath === "residency.status" &&
+            tempData.residency.isPermanentResidentOrCitizen ? (
             <>
               <Typography variant="body2">Select your status</Typography>
               <Box sx={{ mt: 1 }}>
@@ -224,7 +249,8 @@ const PersonalInformationPage = () => {
                 </select>
               </Box>
             </>
-          ) : keyPath === "residency.status" && !tempData.residency.isPermanentResidentOrCitizen ? (
+          ) : keyPath === "residency.status" &&
+            !tempData.residency.isPermanentResidentOrCitizen ? (
             <>
               <TextField
                 fullWidth
@@ -237,7 +263,9 @@ const PersonalInformationPage = () => {
           ) : keyPath === "residency.workAuthorization.visaType" &&
             !tempData.residency.isPermanentResidentOrCitizen ? (
             <>
-              <Typography variant="body2">Choose your work authorization</Typography>
+              <Typography variant="body2">
+                Choose your work authorization
+              </Typography>
               <Box sx={{ mt: 1 }}>
                 <select
                   value={tempData.residency.workAuthorization.visaType}
@@ -251,8 +279,13 @@ const PersonalInformationPage = () => {
                           visaType: e.target.value,
                           // Reset other fields if changed to avoid leftover data
                           otherVisaTitle:
-                            e.target.value === "Other" ? prev.residency.workAuthorization.otherVisaTitle : "",
-                          optReceipt: e.target.value === "F1(CPT/OPT)" ? prev.residency.workAuthorization.optReceipt : null,
+                            e.target.value === "Other"
+                              ? prev.residency.workAuthorization.otherVisaTitle
+                              : "",
+                          optReceipt:
+                            e.target.value === "F1(CPT/OPT)"
+                              ? prev.residency.workAuthorization.optReceipt
+                              : null,
                         },
                       },
                     }))
@@ -283,12 +316,15 @@ const PersonalInformationPage = () => {
             <>
               <TextField
                 fullWidth
-                disabled={tempData.residency.workAuthorization.visaType !== "Other"}
+                disabled={
+                  tempData.residency.workAuthorization.visaType !== "Other"
+                }
                 value={value}
                 onChange={(e) =>
                   setTempData((prev) => {
                     const updated = { ...prev };
-                    updated.residency.workAuthorization.otherVisaTitle = e.target.value;
+                    updated.residency.workAuthorization.otherVisaTitle =
+                      e.target.value;
                     return updated;
                   })
                 }
@@ -326,7 +362,8 @@ const PersonalInformationPage = () => {
                   })
                 }
                 error={
-                  (keyPath.endsWith("startDate") && validationErrors.startDate) ||
+                  (keyPath.endsWith("startDate") &&
+                    validationErrors.startDate) ||
                   (keyPath.endsWith("endDate") && validationErrors.endDate)
                     ? true
                     : false
@@ -379,16 +416,20 @@ const PersonalInformationPage = () => {
         )}
 
         {/* Inline error for certain fields if needed */}
-        {editMode && keyPath === "residency.workAuthorization.visaType" && validationErrors.visaType && (
-          <Typography color="error" variant="body2">
-            {validationErrors.visaType}
-          </Typography>
-        )}
-        {editMode && keyPath === "residency.status" && validationErrors.status && (
-          <Typography color="error" variant="body2">
-            {validationErrors.status}
-          </Typography>
-        )}
+        {editMode &&
+          keyPath === "residency.workAuthorization.visaType" &&
+          validationErrors.visaType && (
+            <Typography color="error" variant="body2">
+              {validationErrors.visaType}
+            </Typography>
+          )}
+        {editMode &&
+          keyPath === "residency.status" &&
+          validationErrors.status && (
+            <Typography color="error" variant="body2">
+              {validationErrors.status}
+            </Typography>
+          )}
       </Box>
     );
   };
@@ -420,15 +461,29 @@ const PersonalInformationPage = () => {
             <Typography variant="h4">Personal Information</Typography>
             <Box>
               {!editMode ? (
-                <Button startIcon={<EditIcon />} variant="contained" onClick={toggleEditMode}>
+                <Button
+                  startIcon={<EditIcon />}
+                  variant="contained"
+                  onClick={toggleEditMode}
+                >
                   Edit
                 </Button>
               ) : (
                 <>
-                  <Button startIcon={<SaveIcon />} variant="contained" color="primary" onClick={handleSave}>
+                  <Button
+                    startIcon={<SaveIcon />}
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSave}
+                  >
                     Save
                   </Button>
-                  <Button startIcon={<CancelIcon />} variant="outlined" color="secondary" onClick={handleCancel}>
+                  <Button
+                    startIcon={<CancelIcon />}
+                    variant="outlined"
+                    color="secondary"
+                    onClick={handleCancel}
+                  >
                     Cancel
                   </Button>
                 </>
@@ -445,17 +500,36 @@ const PersonalInformationPage = () => {
           {/* Profile Picture */}
           <Box sx={{ textAlign: "center", mt: 3 }}>
             <Avatar
-              src={personalInfo.avatar || "https://via.placeholder.com/150/0000FF/FFFFFF?text=Avatar"}
+              src={
+                personalInfo.avatar ||
+                "https://via.placeholder.com/150/0000FF/FFFFFF?text=Avatar"
+              }
               sx={{ width: 100, height: 100, margin: "auto" }}
             />
             <Typography variant="body1">Profile Picture</Typography>
           </Box>
 
           {/* Name Section */}
-          {renderEditableSection("First Name", tempData.name.firstName, "name.firstName")}
-          {renderEditableSection("Last Name", tempData.name.lastName, "name.lastName")}
-          {renderEditableSection("Middle Name", tempData.name.middleName, "name.middleName")}
-          {renderEditableSection("Preferred Name", tempData.name.preferredName, "name.preferredName")}
+          {renderEditableSection(
+            "First Name",
+            tempData.name.firstName,
+            "name.firstName"
+          )}
+          {renderEditableSection(
+            "Last Name",
+            tempData.name.lastName,
+            "name.lastName"
+          )}
+          {renderEditableSection(
+            "Middle Name",
+            tempData.name.middleName,
+            "name.middleName"
+          )}
+          {renderEditableSection(
+            "Preferred Name",
+            tempData.name.preferredName,
+            "name.preferredName"
+          )}
           {renderEditableSection("Email", tempData.email, "email")}
           {renderEditableSection("SSN", tempData.ssn, "ssn")}
           {renderEditableSection("Birth Date", tempData.birthDate, "birthDate")}
@@ -465,10 +539,22 @@ const PersonalInformationPage = () => {
           <Typography variant="h6" sx={{ mt: 3 }}>
             Address
           </Typography>
-          {renderEditableSection("Building/Apt #", tempData.address.building, "address.building")}
-          {renderEditableSection("Street", tempData.address.street, "address.street")}
+          {renderEditableSection(
+            "Building/Apt #",
+            tempData.address.building,
+            "address.building"
+          )}
+          {renderEditableSection(
+            "Street",
+            tempData.address.street,
+            "address.street"
+          )}
           {renderEditableSection("City", tempData.address.city, "address.city")}
-          {renderEditableSection("State", tempData.address.state, "address.state")}
+          {renderEditableSection(
+            "State",
+            tempData.address.state,
+            "address.state"
+          )}
           {renderEditableSection("ZIP", tempData.address.zip, "address.zip")}
 
           {/* Residency Section */}
@@ -480,7 +566,11 @@ const PersonalInformationPage = () => {
             tempData.residency.isPermanentResidentOrCitizen ? "Yes" : "No",
             "residency.isPermanentResidentOrCitizen"
           )}
-          {renderEditableSection("Residency Status", tempData.residency.status, "residency.status")}
+          {renderEditableSection(
+            "Residency Status",
+            tempData.residency.status,
+            "residency.status"
+          )}
 
           {/* Work Authorization if not permanent resident or citizen */}
           {!tempData.residency.isPermanentResidentOrCitizen && (
@@ -510,47 +600,61 @@ const PersonalInformationPage = () => {
               )}
 
               {/* If visaType = F1(CPT/OPT), show upload button for OPT Receipt */}
-              {editMode && tempData.residency.workAuthorization.visaType === "F1(CPT/OPT)" && (
-                <Box sx={{ mt: 2, mb: 2 }}>
-                  <Typography variant="body2">Upload your OPT receipt (required for F1(CPT/OPT))</Typography>
-                  <Button variant="contained" component="label">
-                    Upload OPT Receipt
-                    <input
-                      type="file"
-                      hidden
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const formData = new FormData();
-                          formData.append("document", file);
-                          axios
-                            .post("http://localhost:3000/profileRoutes/profile/uploadDocument", formData, {
-                              headers: {
-                                Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-                              },
-                            })
-                            .then((res) => {
-                              // Suppose res.data._id is the newly uploaded document ID
-                              setTempData((prev) => {
-                                const updated = { ...prev };
-                                updated.residency.workAuthorization.optReceipt = res.data._id;
-                                return updated;
-                              });
-                            })
-                            .catch((err) => {
-                              console.error("Failed to upload OPT receipt:", err);
-                            });
-                        }
-                      }}
-                    />
-                  </Button>
-                  {validationErrors.optReceipt && (
-                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                      {validationErrors.optReceipt}
+              {editMode &&
+                tempData.residency.workAuthorization.visaType ===
+                  "F1(CPT/OPT)" && (
+                  <Box sx={{ mt: 2, mb: 2 }}>
+                    <Typography variant="body2">
+                      Upload your OPT receipt (required for F1(CPT/OPT))
                     </Typography>
-                  )}
-                </Box>
-              )}
+                    <Button variant="contained" component="label">
+                      Upload OPT Receipt
+                      <input
+                        type="file"
+                        hidden
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const formData = new FormData();
+                            formData.append("document", file);
+                            axios
+                              .post(
+                                "http://localhost:3000/profileRoutes/profile/uploadDocument",
+                                formData,
+                                {
+                                  headers: {
+                                    Authorization: `Bearer ${localStorage.getItem(
+                                      "authToken"
+                                    )}`,
+                                  },
+                                }
+                              )
+                              .then((res) => {
+                                // Suppose res.data._id is the newly uploaded document ID
+                                setTempData((prev) => {
+                                  const updated = { ...prev };
+                                  updated.residency.workAuthorization.optReceipt =
+                                    res.data._id;
+                                  return updated;
+                                });
+                              })
+                              .catch((err) => {
+                                console.error(
+                                  "Failed to upload OPT receipt:",
+                                  err
+                                );
+                              });
+                          }
+                        }}
+                      />
+                    </Button>
+                    {validationErrors.optReceipt && (
+                      <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                        {validationErrors.optReceipt}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
             </>
           )}
 
@@ -558,8 +662,16 @@ const PersonalInformationPage = () => {
           <Typography variant="h6" sx={{ mt: 3 }}>
             Contact Info
           </Typography>
-          {renderEditableSection("Cell Phone", tempData.contactInfo.cellPhone, "contactInfo.cellPhone")}
-          {renderEditableSection("Work Phone", tempData.contactInfo.workPhone, "contactInfo.workPhone")}
+          {renderEditableSection(
+            "Cell Phone",
+            tempData.contactInfo.cellPhone,
+            "contactInfo.cellPhone"
+          )}
+          {renderEditableSection(
+            "Work Phone",
+            tempData.contactInfo.workPhone,
+            "contactInfo.workPhone"
+          )}
 
           {/* Emergency Contact Section */}
           <Typography variant="h6" sx={{ mt: 3 }}>
@@ -567,18 +679,40 @@ const PersonalInformationPage = () => {
           </Typography>
           {tempData.emergencyContacts.map((contact, index) => (
             <Box key={index} sx={{ mb: 2 }}>
-              {renderEditableSection("First Name", contact.name.firstName, `emergencyContacts.${index}.name.firstName`)}
-              {renderEditableSection("Last Name", contact.name.lastName, `emergencyContacts.${index}.name.lastName`)}
-              {renderEditableSection("Phone", contact.phone, `emergencyContacts.${index}.phone`)}
-              {renderEditableSection("Email", contact.email, `emergencyContacts.${index}.email`)}
-              {renderEditableSection("Relationship", contact.relationship, `emergencyContacts.${index}.relationship`)}
+              {renderEditableSection(
+                "First Name",
+                contact.name.firstName,
+                `emergencyContacts.${index}.name.firstName`
+              )}
+              {renderEditableSection(
+                "Last Name",
+                contact.name.lastName,
+                `emergencyContacts.${index}.name.lastName`
+              )}
+              {renderEditableSection(
+                "Phone",
+                contact.phone,
+                `emergencyContacts.${index}.phone`
+              )}
+              {renderEditableSection(
+                "Email",
+                contact.email,
+                `emergencyContacts.${index}.email`
+              )}
+              {renderEditableSection(
+                "Relationship",
+                contact.relationship,
+                `emergencyContacts.${index}.relationship`
+              )}
 
               {editMode && (
                 <IconButton
                   onClick={() =>
                     setTempData((prev) => ({
                       ...prev,
-                      emergencyContacts: prev.emergencyContacts.filter((_, idx) => idx !== index),
+                      emergencyContacts: prev.emergencyContacts.filter(
+                        (_, idx) => idx !== index
+                      ),
                     }))
                   }
                 >
@@ -617,7 +751,10 @@ const PersonalInformationPage = () => {
             Documents
           </Typography>
           {tempData.documents.map((doc) => (
-            <Box key={doc.id} sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+            <Box
+              key={doc.id}
+              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+            >
               <Typography>{doc.name}</Typography>
               <Box>
                 <IconButton onClick={() => window.open(doc.url)}>
@@ -641,11 +778,17 @@ const PersonalInformationPage = () => {
                     const formData = new FormData();
                     formData.append("document", file);
                     axios
-                      .post("http://localhost:3000/profileRoutes/uploadDocument", formData, {
-                        headers: {
-                          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-                        },
-                      })
+                      .post(
+                        "http://localhost:3000/profileRoutes/uploadDocument",
+                        formData,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                              "authToken"
+                            )}`,
+                          },
+                        }
+                      )
                       .then((res) => {
                         setTempData((prev) => ({
                           ...prev,
@@ -662,10 +805,15 @@ const PersonalInformationPage = () => {
           )}
 
           {/* Confirmation Dialog */}
-          <Dialog open={confirmDiscard} onClose={() => setConfirmDiscard(false)}>
+          <Dialog
+            open={confirmDiscard}
+            onClose={() => setConfirmDiscard(false)}
+          >
             <DialogTitle>Discard Changes?</DialogTitle>
             <DialogContent>
-              <Typography>Are you sure you want to discard all changes?</Typography>
+              <Typography>
+                Are you sure you want to discard all changes?
+              </Typography>
             </DialogContent>
             <DialogActions>
               <Button onClick={() => confirmDiscardChanges(false)}>No</Button>

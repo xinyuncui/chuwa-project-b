@@ -101,7 +101,9 @@ const NavBar = ({ isLoggedIn }) => {
                 {/* <MenuItem onClick={() => navigate("/hr-send-email")}>
                   Send Regisration Link
                 </MenuItem> */}
-                <MenuItem onClick={handleMenuClose}>Employee Profiles</MenuItem>
+                <MenuItem onClick={() => navigate("/employee-profile")}>
+                  Employee Profiles
+                </MenuItem>
                 <MenuItem onClick={handleMenuClose}>
                   Visa Status Management
                 </MenuItem>
