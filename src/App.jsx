@@ -12,6 +12,8 @@ import ErrorPage from "./pages/ErrorPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmployeeSummary from "./pages/HR/EmployeeProfile";
 import EmployeeProfilePage from "./pages/HR/SingleEmployeePage";
+import VisaStatusManagementPage from "./pages/VisaStatusManagementPage";
+
 function App() {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
@@ -32,6 +34,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRole={"EMPLOYEE"}>
                   <PersonalInformationPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/visa-status-management"
+              element={
+                <ProtectedRoute allowedRole={"EMPLOYEE"}>
+                  <VisaStatusManagementPage />
                 </ProtectedRoute>
               }
             />

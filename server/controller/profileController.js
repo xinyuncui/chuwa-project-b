@@ -2,14 +2,19 @@ import User from "../model/employeeDB.js";
 import Document from "../model/Document.js";
 import OnboardingApplication from "../model/OnboardingApplication.js";
 
+// Get personal information for the logged-in user
 export const getPersonalInfo = async (req, res) => {
   try {
-    const userId = req.employee.id; // Extract user ID from the JWT payload added by the middleware
-    const user = await User.findById(userId).select("profile"); // Fetch only the profile field
-
+    // 1) Extract userId from the JWT (here, it is req.employee.id)
+    const userId = req.employee.id;
+    
+    // 2) Find the user's profile
+    //    Select only user.profile here; you can modify this to include other fields as needed.
+    const user = await User.findById(userId).select("profile");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
 
     res.status(200).json({ profile: user.profile });
   } catch (error) {
@@ -30,26 +35,45 @@ export const getProfile = async (req, res) => {
 
     res.status(200).json({ profile: user.profile });
   } catch (error) {
+
+    // 3) Find the user's corresponding OnboardingApplication
+    //    - If the OnboardingApplication schema has a field `user: { type: ObjectId, ref: 'User' }`
+    //      and you stored the userId while creating it, you can query like this.
+    //    - `populate("documents")` is used to fetch detailed information of the referenced `Document` in the `documents` field.
+    const onboardingApp = await OnboardingApplication
+      .findOne({ user: userId })
+      .populate("documents"); 
+
+    //    - If needed, you can further populate fields within `documents` using .populate("documents.someField")
+
+    // 4) Prepare the response data for the frontend
+    //    - If no corresponding OnboardingApplication is found, it can be null or undefined.
+    res.status(200).json({
+      profile: user.profile,
+      onboardingApplication: onboardingApp, // Could be null
+      documents: onboardingApp ? onboardingApp.documents : [],
+    });
+  } catch (error) {
+    console.error("Error in getPersonalInfo:", error);
     res.status(500).json({
       message: `Error fetching personal information: ${error.message}`,
     });
   }
 };
 
-/**
- * Get all information for all users
- */
+// Get personal info for all employees (with pagination and search)
 export const getAllPersonalInfo = async (req, res) => {
   try {
-    // pagination
+    // Pagination
     const { page = 1, limit = 10, search = "" } = req.query;
 
+    // Build query for "EMPLOYEE" role and optional search
     const query = {
       role: "EMPLOYEE",
       $or: [
-        { "profile.name.firstName": { $regex: search, $options: "i" } }, // Search by first name
-        { "profile.name.lastName": { $regex: search, $options: "i" } }, // Search by last name
-        { "profile.name.preferredName": { $regex: search, $options: "i" } }, // Search by preferred
+        { "profile.name.firstName": { $regex: search, $options: "i" } },
+        { "profile.name.lastName": { $regex: search, $options: "i" } },
+        { "profile.name.preferredName": { $regex: search, $options: "i" } },
       ],
     };
 
@@ -76,38 +100,64 @@ export const getAllPersonalInfo = async (req, res) => {
       .json({
         message: `Error fetching personal information: ${error.message}`,
       });
+
   }
 };
 
-/**
- * Update personal information for the logged-in user
- */
+// Update personal information for the logged-in user
 export const updatePersonalInfo = async (req, res) => {
   try {
-    const userId = req.employee.id; // Extract user ID from the JWT payload
-    const updatedProfile = req.body; // Assume profile data is sent in the request body
+    const userId = req.employee.id; // Extract user ID from JWT
+    const updatedProfile = req.body; // Profile data from request body
 
+    // 1) Find user
     const user = await User.findById(userId);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.profile = updatedProfile; // Update the profile field with new data
-    await user.save(); // Save the updated user document
+    // 2) Update user's profile
+    user.profile = updatedProfile;
+    await user.save();
 
-    res
-      .status(200)
-      .json({ message: "Profile updated successfully", profile: user.profile });
-  } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: `Error updating personal information: ${error.message}`,
+    // 3) Create or update OnboardingApplication for this user, status always "Pending"
+    let onboardingApp = await OnboardingApplication.findOne({ user: userId });
+    if (!onboardingApp) {
+      // If not found, create new
+      onboardingApp = new OnboardingApplication({
+        user: userId,
+        // By default, status is "Pending" from your schema
+        // We can explicitly set it too:
+        status: "Pending",
       });
+    } else {
+      // If found, set status back to "Pending" if you want every update to reset the status
+      onboardingApp.status = "Pending";
+    }
+
+
+    // Optional: If you want to set the visaType based on user.profile
+    // For example, if your "visaType" is in user.profile.residency.workAuthorization.visaType
+    const visaTypeFromProfile =
+      updatedProfile?.residency?.workAuthorization?.visaType || "Other";
+    onboardingApp.visaType = visaTypeFromProfile;
+
+    // Save the onboarding application
+    await onboardingApp.save();
+
+    // Return response
+    res.status(200).json({
+      message: "Profile updated successfully, status set to Pending",
+      profile: user.profile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: `Error updating personal information: ${error.message}`,
+    });
   }
 };
 
+// Upload document for the logged-in user
 export const uploadDocument = async (req, res) => {
   try {
     const userId = req.employee.id;
@@ -116,42 +166,46 @@ export const uploadDocument = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Check if the file is present
     if (!req.file) {
+
       // If multer didn't receive any file or fileFilter blocked it
+
+
+      // If no file or invalid file type
 
       return res
         .status(400)
         .json({ message: "No file uploaded or invalid file type." });
     }
 
-    // Optional: get doc type, step from req.body or set defaults
+    // Retrieve docType and step from req.body or set defaults
     const docType = req.body.type || "OPT Receipt";
     const step = req.body.step || "OPT Receipt";
 
-    // If you want to link to an existing OnboardingApplication,
-    // you might pass an "applicationId" in req.body, or do "findOne({ user: userId })"
-    // Below is an example approach:
-    let onboardingApp = null;
-    if (req.body.applicationId) {
-      onboardingApp = await OnboardingApplication.findById(
-        req.body.applicationId
-      );
+    // Find or create OnboardingApplication
+    // Always set status to "Pending" if user uploads document
+    let onboardingApp = await OnboardingApplication.findOne({ user: userId });
+    if (!onboardingApp) {
+      // Create new if none
+      onboardingApp = new OnboardingApplication({
+        user: userId,
+        status: "Pending", // Force status to "Pending"
+        // You can set default visaType as well, or read from user.profile
+        visaType: "OPT", // Or read from profile
+      });
     } else {
-      // or auto-create one for the user if none found
-      onboardingApp = await OnboardingApplication.findOne({ user: userId });
-      if (!onboardingApp) {
-        onboardingApp = await OnboardingApplication.create({
-          user: userId,
-          visaType: "OPT", // or from req.body
-        });
-      }
+      // Force status to "Pending" upon document upload
+      onboardingApp.status = "Pending";
     }
 
-    // Create Document record
+    await onboardingApp.save();
+
+    // Create Document
     const newDoc = new Document({
       type: docType,
       uploadedBy: userId,
-      relatedTo: onboardingApp._id, // link it to that application
+      relatedTo: onboardingApp._id, // Link to the application
       status: "Pending",
       step,
       feedback: "",
@@ -164,21 +218,23 @@ export const uploadDocument = async (req, res) => {
           uploadDate: new Date(),
         },
       ],
-      // Store file data into DB as buffer
-      fileData: req.file.buffer,
-      fileContentType: req.file.mimetype,
+      fileData: req.file.buffer, // Save file as buffer in DB
+      fileContentType: req.file.mimetype, // Store MIME type
     });
 
+    // Save document
     await newDoc.save();
 
-    // Also push this doc ref into OnboardingApplication
+    // Push document reference to OnboardingApplication
     onboardingApp.documents.push(newDoc._id);
     await onboardingApp.save();
 
-    // Return the newly created doc record
+    // Return newly created doc record
     return res.status(200).json(newDoc);
   } catch (error) {
     console.error("Error in uploadDocument:", error);
     return res.status(500).json({ message: error.message });
   }
+
 };
+
