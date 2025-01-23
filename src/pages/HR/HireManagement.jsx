@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   TextField,
@@ -17,16 +18,21 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { baseUrl } from "../../utils/service";
+import { fetchApplications } from "../../redux/applicationStatusSlice";
+// import { fetchHistory } from "../../redux/registrationHistorySlice";
 
 const HireManagement = () => {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  // const navigate = useNavigate();
+
+  const { pending, rejected, approved, isloading, error } = useSelector(
+    (state) => state.applicationStatus
+  );
+  // console.log("redux store:", pending, rejected, approved);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [history, setHistory] = useState([]);
-  const [pendingApplications, setPendingApplications] = useState([]);
-  const [approvedApplications, setApprovedApplications] = useState([]);
-  const [rejectedApplications, setRejectedApplications] = useState([]);
 
   const fetchHistory = async () => {
     setFetching(true);
@@ -41,9 +47,8 @@ const HireManagement = () => {
         }
       );
       const data = response.data;
-      console.log(data.history);
+      console.log("history:", data.history);
       setHistory(data.history);
-      console.log(history);
     } catch (e) {
       console.error(e);
       alert("Failed to fetch history:", e.message);
@@ -51,36 +56,17 @@ const HireManagement = () => {
       setFetching(false);
     }
   };
-  const fetchApplication = async () => {
-    try {
-      const response = await axios.get(`${baseUrl}/applications`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-      const {
-        pendingApplications,
-        approvedApplications,
-        rejectedApplications,
-      } = response.data;
-      console.log(
-        pendingApplications,
-        approvedApplications,
-        rejectedApplications
-      );
-      setPendingApplications(pendingApplications);
-      setApprovedApplications(approvedApplications);
-      setRejectedApplications(rejectedApplications);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to fetch applications:", e.message);
-    }
-  };
+
   // fetch history on component mount
   useEffect(() => {
     fetchHistory();
-    fetchApplication();
+    // fetchApplication();
   }, []);
+
+  useEffect(() => {
+    dispatch(fetchApplications());
+    // dispatch(fetchHistory());
+  }, [dispatch]);
 
   // handle send email link
   const handleSubmit = async () => {
@@ -180,6 +166,7 @@ const HireManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
       {/* Pending Applications */}
       <Typography variant="h6" sx={{ mb: 2 }}>
         Pending Applications
@@ -203,8 +190,8 @@ const HireManagement = () => {
                   <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
-            ) : pendingApplications.length > 0 ? (
-              pendingApplications.map((app) => (
+            ) : pending.length > 0 ? (
+              pending.map((app) => (
                 <TableRow key={app._id}>
                   <TableCell sx={{ width: "33%" }}>
                     {app.user.profile.name.firstName +
@@ -212,7 +199,16 @@ const HireManagement = () => {
                   </TableCell>
                   <TableCell sx={{ width: "33%" }}>{app.user.email}</TableCell>
                   <TableCell sx={{ width: "34%" }}>
-                    <Button variant="contained" onClick={() => navigate("/")}>
+                    <Button
+                      variant="contained"
+                      onClick={() =>
+                        window.open(
+                          `/view-application/?userId=${app.user._id}&appId=${app._id}`,
+                          "_blank",
+                          "noopener,noreferrer"
+                        )
+                      }
+                    >
                       View Application
                     </Button>
                     {/* <Button onClick={() => handleApprove(app.id)}>Approve</Button>
@@ -250,8 +246,8 @@ const HireManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {approvedApplications.length > 0 ? (
-              approvedApplications.map((app) => (
+            {approved.length > 0 ? (
+              approved.map((app) => (
                 <TableRow key={app._id}>
                   <TableCell sx={{ width: "33%" }}>
                     {app.user.profile.name.firstName +
@@ -293,8 +289,8 @@ const HireManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rejectedApplications.length > 0 ? (
-              rejectedApplications.map((app) => (
+            {rejected.length > 0 ? (
+              rejected.map((app) => (
                 <TableRow key={app._id}>
                   <TableCell sx={{ width: "33%" }}>
                     {app.user.profile.name.firstName +

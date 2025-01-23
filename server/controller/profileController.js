@@ -7,7 +7,7 @@ export const getPersonalInfo = async (req, res) => {
   try {
     // 1) Extract userId from the JWT (here, it is req.employee.id)
     const userId = req.employee.id;
-    
+
     // 2) Find the user's profile
     //    Select only user.profile here; you can modify this to include other fields as needed.
     const user = await User.findById(userId).select("profile");
@@ -19,9 +19,9 @@ export const getPersonalInfo = async (req, res) => {
     //    - If the OnboardingApplication schema has a field `user: { type: ObjectId, ref: 'User' }`
     //      and you stored the userId while creating it, you can query like this.
     //    - `populate("documents")` is used to fetch detailed information of the referenced `Document` in the `documents` field.
-    const onboardingApp = await OnboardingApplication
-      .findOne({ user: userId })
-      .populate("documents"); 
+    const onboardingApp = await OnboardingApplication.findOne({
+      user: userId,
+    }).populate("documents");
 
     //    - If needed, you can further populate fields within `documents` using .populate("documents.someField")
 
@@ -74,12 +74,29 @@ export const getAllPersonalInfo = async (req, res) => {
       currentPage: Number(page),
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: `Error fetching personal information: ${error.message}` });
+    res.status(500).json({
+      message: `Error fetching personal information: ${error.message}`,
+    });
   }
 };
 
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.params.id; // Extract user ID from url
+    const user = await User.findById(userId).select("profile"); // Fetch only the profile field
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      profile: user.profile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: `Error fetching personal profile: ${error.message}`,
+    });
+  }
+};
 // Update personal information for the logged-in user
 export const updatePersonalInfo = async (req, res) => {
   try {
