@@ -9,6 +9,10 @@ const onboardingApplicationSchema = new mongoose.Schema(
       default: "Pending",
       required: true,
     },
+    feedback: {
+      type: String,
+      default: "",
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId, // Reference to User model
       ref: "User",

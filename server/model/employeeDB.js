@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 
 const profileSchema = new mongoose.Schema({
   name: {
-    firstName: { type: String, default: "" }, 
+    firstName: { type: String, default: "" },
     lastName: { type: String, default: "" },
     middleName: { type: String, default: "" },
     preferredName: { type: String, default: "" },
   },
-  avatar: { type: String, default: "" }, 
+  avatar: { type: String, default: "" },
   address: {
     building: { type: String, default: "" },
     street: { type: String, default: "" },
@@ -22,7 +22,7 @@ const profileSchema = new mongoose.Schema({
   email: { type: String, default: "" },
   ssn: { type: String, default: "" },
   birthDate: { type: String, default: "" },
-  gender: { type: String, default: "" },
+  gender: { type: String, enum: ["Male", "Female", "Prefer not to say"] },
   residency: {
     isPermanentResidentOrCitizen: { type: Boolean, default: false },
     status: { type: String, default: "" },

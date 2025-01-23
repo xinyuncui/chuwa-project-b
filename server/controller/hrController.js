@@ -1,6 +1,7 @@
 import { sendRegistrationEmail } from "../utils/sendRegistrationEmail.js";
 import registrationHistory from "../model/RegistrationHistory.js";
 import User from "../model/employeeDB.js";
+import { sendNotificationEmail } from "../utils/sendNotification.js";
 
 export const hrSendEmail = async (req, res) => {
   const { email } = req.body;
@@ -41,5 +42,21 @@ export const getHistory = async (req, res) => {
       .json({ message: "fetch history successfully", history: history });
   } catch (e) {
     res.status(500).json("error", e.message);
+  }
+};
+
+export const sendNotification = async (req, res) => {
+  const { email, message } = req.body;
+
+  if (!email || !message) {
+    return res.status(400).json({ error: "Email and message are required" });
+  }
+
+  try {
+    await sendNotificationEmail(email, message);
+    res.status(200).json({ message: "Notification sent successfully" });
+  } catch (error) {
+    console.error("Failed to send notification:", error);
+    res.status(500).json({ error: "Failed to send notification" });
   }
 };

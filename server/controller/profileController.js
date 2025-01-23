@@ -15,23 +15,6 @@ export const getPersonalInfo = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ profile: user.profile });
-  } catch (error) {
-    res.status(500).json({
-      message: `Error fetching personal information: ${error.message}`,
-    });
-  }
-};
-
-export const getProfile = async (req, res) => {
-  try {
-    const userId = req.params.id; // Extract user ID from url
-    const user = await User.findById(userId).select("profile"); // Fetch only the profile field
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
     // 3) Find the user's corresponding OnboardingApplication
     //    - If the OnboardingApplication schema has a field `user: { type: ObjectId, ref: 'User' }`
     //      and you stored the userId while creating it, you can query like this.
@@ -97,6 +80,23 @@ export const getAllPersonalInfo = async (req, res) => {
   }
 };
 
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.params.id; // Extract user ID from url
+    const user = await User.findById(userId).select("profile"); // Fetch only the profile field
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      profile: user.profile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: `Error fetching personal profile: ${error.message}`,
+    });
+  }
+};
 // Update personal information for the logged-in user
 export const updatePersonalInfo = async (req, res) => {
   try {
@@ -160,10 +160,7 @@ export const uploadDocument = async (req, res) => {
 
     // Check if the file is present
     if (!req.file) {
-      // If multer didn't receive any file or fileFilter blocked it
-
       // If no file or invalid file type
-
       return res
         .status(400)
         .json({ message: "No file uploaded or invalid file type." });

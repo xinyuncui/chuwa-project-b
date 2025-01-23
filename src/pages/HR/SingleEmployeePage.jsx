@@ -1,22 +1,49 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Avatar, Card, CardContent } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Avatar,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Modal,
+} from "@mui/material";
 import axios from "axios";
 // import { updateProfile } from "../redux/authSlice";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { baseUrl } from "../../utils/service";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  approveApplication,
+  rejectApplication,
+} from "../../redux/applicationStatusSlice";
 
-const EmployeeProfilePage = () => {
-  const { id } = useParams();
-  console.log(id);
+const EmployeeProfilePage = ({ isApplication }) => {
+  //   const { id } = useParams();
+  //   console.log(id);
+  const dispatch = useDispatch();
+  const location = useLocation();
 
+  const appStatus = useSelector((state) => state.applicationStatus);
+  console.log("Redux state:", appStatus);
+
+  // Parse query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const userId = queryParams.get("userId");
+  const appId = queryParams.get("appId");
+  console.log(`userId: ${userId}, appId: ${appId}`);
   const [personalInfo, setPersonalInfo] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [visibility, setVisibility] = useState(true);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchPersonalInfo = async () => {
       try {
         const token = localStorage.getItem("authToken");
         const response = await axios.get(
-          `${baseUrl}/profileRoutes/profile/${id}`,
+          `${baseUrl}/profileRoutes/profile/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -24,7 +51,7 @@ const EmployeeProfilePage = () => {
           }
         );
         setPersonalInfo(response.data.profile);
-        console.log(personalInfo);
+        console.log("personal info:", response.data.profile);
         // setTempData(response.data.profile);
       } catch (err) {
         console.log("Failed to fetch personal information.");
@@ -33,8 +60,54 @@ const EmployeeProfilePage = () => {
     };
 
     fetchPersonalInfo();
-  }, [id]);
+  }, [userId]);
 
+  // handle approved button
+  const handleApprove = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      console.log("Approve token:", token);
+      const response = await axios.post(
+        `${baseUrl}/applications/approve/${appId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      dispatch(approveApplication(appId));
+      console.log("Employee approved successfully:", response.data);
+      // the button should disappear
+      setVisibility(false);
+    } catch (err) {
+      console.error("Failed to approve employee:", err);
+    }
+  };
+
+  // handle reject button
+  const handleReject = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.post(
+        `${baseUrl}/applications/reject/${appId}`,
+        { feedback },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("reject application successfully");
+
+      dispatch(rejectApplication(appId));
+      // alert("Application rejected with feedback!");
+      setVisibility(false);
+      setRejectModalOpen(false); // Close modal after rejection
+    } catch (err) {
+      console.error("Failed to reject application.", err);
+    }
+  };
   // Render loading state until `personalInfo` is fetched
   if (!personalInfo) {
     return (
@@ -64,7 +137,7 @@ const EmployeeProfilePage = () => {
 
           {/* Name Section */}
           <Typography variant="h6" sx={{ mt: 3 }}>
-            Name
+            Personal Information
           </Typography>
           <Typography>First Name: {personalInfo.name.firstName}</Typography>
           <Typography>Last Name: {personalInfo.name.lastName}</Typography>
@@ -171,8 +244,80 @@ const EmployeeProfilePage = () => {
               </Typography>
             </Box>
           ))}
+
+          {/* Conditionally Render Buttons */}
+          {isApplication && (
+            <Box sx={{ mt: 3, textAlign: "center" }}>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleApprove}
+                sx={{ mr: 2 }}
+                disabled={!visibility}
+              >
+                Approve
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => setRejectModalOpen(true)}
+                disabled={!visibility}
+              >
+                Reject
+              </Button>
+            </Box>
+          )}
         </CardContent>
       </Card>
+
+      {/* Reject Modal */}
+      <Modal
+        open={rejectModalOpen}
+        onClose={() => setRejectModalOpen(false)}
+        aria-labelledby="reject-modal-title"
+        aria-describedby="reject-modal-description"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography id="reject-modal-title" variant="h6">
+            Provide Feedback for Rejection
+          </Typography>
+          <TextField
+            id="feedback"
+            label="Feedback"
+            multiline
+            rows={4}
+            fullWidth
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+          <Box sx={{ mt: 3, textAlign: "right" }}>
+            <Button onClick={() => setRejectModalOpen(false)} sx={{ mr: 2 }}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleReject}
+              // disabled={!feedback.trim()}
+            >
+              Submit
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };
