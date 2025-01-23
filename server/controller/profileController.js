@@ -158,68 +158,85 @@ export const uploadDocument = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the file is present
     if (!req.file) {
-      // If no file or invalid file type
       return res
         .status(400)
         .json({ message: "No file uploaded or invalid file type." });
     }
 
-    // Retrieve docType and step from req.body or set defaults
     const docType = req.body.type || "OPT Receipt";
     const step = req.body.step || "OPT Receipt";
 
-    // Find or create OnboardingApplication
-    // Always set status to "Pending" if user uploads document
     let onboardingApp = await OnboardingApplication.findOne({ user: userId });
     if (!onboardingApp) {
-      // Create new if none
       onboardingApp = new OnboardingApplication({
         user: userId,
-        status: "Pending", // Force status to "Pending"
-        // You can set default visaType as well, or read from user.profile
-        visaType: "OPT", // Or read from profile
+        status: "Pending",
+        visaType: "OPT", 
       });
     } else {
-      // Force status to "Pending" upon document upload
       onboardingApp.status = "Pending";
     }
 
     await onboardingApp.save();
 
-    // Create Document
-    const newDoc = new Document({
-      type: docType,
-      uploadedBy: userId,
-      relatedTo: onboardingApp._id, // Link to the application
-      status: "Pending",
-      step,
-      feedback: "",
-      uploadDate: new Date(),
-      versionHistory: [
-        {
-          version: 1,
-          status: "Pending",
-          feedback: "",
-          uploadDate: new Date(),
-        },
-      ],
-      fileData: req.file.buffer, // Save file as buffer in DB
-      fileContentType: req.file.mimetype, // Store MIME type
+    let existingDoc = await Document.findOne({
+      relatedTo: onboardingApp._id,
+      step: step,
     });
 
-    // Save document
-    await newDoc.save();
+    if (existingDoc) {
+      existingDoc.type = docType;
+      existingDoc.fileData = req.file.buffer;
+      existingDoc.fileContentType = req.file.mimetype;
+      existingDoc.status = "Pending";
+      existingDoc.feedback = "";
+      existingDoc.uploadDate = new Date();
+      existingDoc.versionHistory.push({
+        version: existingDoc.versionHistory.length + 1,
+        status: "Pending",
+        feedback: "",
+        uploadDate: new Date(),
+      });
+      await existingDoc.save();
+    } else {
+      const newDoc = new Document({
+        type: docType,
+        uploadedBy: userId,
+        relatedTo: onboardingApp._id,
+        status: "Pending",
+        step,
+        feedback: "",
+        uploadDate: new Date(),
+        versionHistory: [
+          {
+            version: 1,
+            status: "Pending",
+            feedback: "",
+            uploadDate: new Date(),
+          },
+        ],
+        fileData: req.file.buffer,
+        fileContentType: req.file.mimetype,
+      });
 
-    // Push document reference to OnboardingApplication
-    onboardingApp.documents.push(newDoc._id);
-    await onboardingApp.save();
+      await newDoc.save();
+      onboardingApp.documents.push(newDoc._id);
+      await onboardingApp.save();
+    }
 
-    // Return newly created doc record
-    return res.status(200).json(newDoc);
+    const updatedDocs = await Document.find({
+      relatedTo: onboardingApp._id,
+      step: step,
+    });
+
+    const latestDoc = updatedDocs[updatedDocs.length - 1];
+
+    return res.status(200).json(latestDoc);
   } catch (error) {
     console.error("Error in uploadDocument:", error);
     return res.status(500).json({ message: error.message });
   }
 };
+
+
