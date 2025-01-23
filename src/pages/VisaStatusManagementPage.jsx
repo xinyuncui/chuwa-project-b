@@ -160,7 +160,7 @@ const VisaStatusManagementPage = () => {
             <Typography variant="h5">Visa Status</Typography>
             <Divider sx={{ my: 2 }} />
             <Typography>
-              Current Application Status: <b>{status}</b>
+              Current Onboarding Application Status: <b>{status}</b>
             </Typography>
             <Typography sx={{ mt: 1 }}>
               Since your visa type is not F1(OPT), there is no multi-step
@@ -240,7 +240,7 @@ const VisaStatusManagementPage = () => {
       </Card>
     );
   };
-
+  console.log("application status is " + status);
   // Render all 4 steps in order
   return (
     <Box maxWidth={600} mx="auto" mt={4}>
@@ -249,11 +249,19 @@ const VisaStatusManagementPage = () => {
       </Typography>
       <Divider sx={{ mb: 2 }} />
 
-      <Typography sx={{ mb: 2 }}>
+      {/* <Typography sx={{ mb: 2 }}>
         Overall Application Status: <b>{status}</b>
-      </Typography>
+      </Typography> */}
+      {status === "Approved" ? (
+        steps.map((step, idx) => renderStepCard(step, idx))
+      ) : (
+        <Typography color="error" sx={{ mb: 2 }}>
+          You have to wait approval on your onbaording application, then you can
+          upload your visa documents
+        </Typography>
+      )}
 
-      {steps.map((step, idx) => renderStepCard(step, idx))}
+      {/* {steps.map((step, idx) => renderStepCard(step, idx))} */}
     </Box>
   );
 };

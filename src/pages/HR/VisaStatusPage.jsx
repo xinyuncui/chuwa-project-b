@@ -19,6 +19,7 @@ import {
   InputLabel,
   Link,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchApplications } from "../../redux/applicationStatusSlice";
@@ -51,8 +52,8 @@ const HRVisaStatusManagementPage = () => {
 
   //   const pending = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   const nextStep = {
-    "OPT Receipt": "upload OPT EAD",
-    "OPT EAD": "upload I-983",
+    OPTReceipt: "upload OPT EAD",
+    OPTEAD: "upload I-983",
     "I-983": "upload I-20",
     "I-20": "all set",
   };
@@ -168,14 +169,18 @@ const HRVisaStatusManagementPage = () => {
                         ? (() => {
                             const lastDoc =
                               app.documents[app.documents.length - 1];
-                            console.log(lastDoc.status);
+                            // console.log(lastDoc.status);
                             switch (lastDoc.status) {
                               case "Pending":
                                 return "waiting for HR approval";
                               case "Approved":
-                                return nextStep[lastDoc.type] || "All Set";
+                                // console.log("current file is" + lastDoc.step);
+                                // console.log(
+                                //   "next file is" + nextStep[lastDoc.step]
+                                // );
+                                return nextStep[lastDoc.step] || "All Set";
                               case "Rejected":
-                                return "re-upload " + lastDoc.type;
+                                return "re-upload " + lastDoc.step;
                               default:
                                 return "Unknown status";
                             }
@@ -197,7 +202,11 @@ const HRVisaStatusManagementPage = () => {
                                     size="small"
                                     sx={{ marginBottom: 1 }}
                                     component="a"
-                                    href={lastDoc.previewLink} // Ensure `previewLink` exists in your document object
+                                    href={
+                                      baseUrl +
+                                      "/document/preview/" +
+                                      lastDoc._id
+                                    }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
@@ -368,6 +377,7 @@ const HRVisaStatusManagementPage = () => {
                         (1000 * 60 * 60 * 24)
                     )}
                   </TableCell>
+                  {/* next step */}
                   <TableCell sx={{ width: "20%" }}>
                     {app.visaType === "OPT" &&
                     app.documents &&
@@ -375,14 +385,18 @@ const HRVisaStatusManagementPage = () => {
                       ? (() => {
                           const lastDoc =
                             app.documents[app.documents.length - 1];
-                          console.log(lastDoc.status);
+                          // console.log(lastDoc.status);
                           switch (lastDoc.status) {
                             case "Pending":
                               return "waiting for HR approval";
                             case "Approved":
-                              return nextStep[lastDoc.type] || "All Set";
+                              // console.log(
+                              //   "Approved for next step",
+                              //   nextStep[lastDoc.step]
+                              // );
+                              return nextStep[lastDoc.step] || "All Set";
                             case "Rejected":
-                              return "re-upload " + lastDoc.type;
+                              return "re-upload " + lastDoc.step;
                             default:
                               return "Unknown status";
                           }
@@ -391,6 +405,7 @@ const HRVisaStatusManagementPage = () => {
                       ? "upload OPT Receipt"
                       : null}
                   </TableCell>
+
                   {/* document column */}
 
                   <TableCell sx={{ width: "30%" }}>
@@ -398,13 +413,32 @@ const HRVisaStatusManagementPage = () => {
                       ? app.documents
                           .filter((doc) => doc.status === "Approved")
                           .map((doc, index) => (
-                            <div key={index}>
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: "15px",
+                              }}
+                            >
+                              {/* preview link */}
                               <Link
-                                href={baseUrl + "/uploads/" + doc.file}
+                                href={`${baseUrl}/document/preview/${doc._id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                {doc.type}
+                                {doc.step}
+                              </Link>
+                              {/* download */}
+                              <Link
+                                href={`${baseUrl}/document/download/${doc._id}`}
+                                download={doc.step}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "#007BFF",
+                                }}
+                              >
+                                <DownloadIcon />
                               </Link>
                             </div>
                           ))
@@ -415,7 +449,7 @@ const HRVisaStatusManagementPage = () => {
             ) : (
               <TableRow>
                 <TableCell colSpan={3} align="center">
-                  No pending applications
+                  No records found
                 </TableCell>
               </TableRow>
             )}

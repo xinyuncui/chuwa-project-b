@@ -52,6 +52,7 @@ export const rejectDocument = async (req, res) => {
     }
 
     document.status = "Rejected";
+    document.feedback = feedback;
 
     await document.save();
 
@@ -65,5 +66,63 @@ export const rejectDocument = async (req, res) => {
       message: "Failed to approve document",
       error: error.message,
     });
+  }
+};
+
+export const previewDocument = async (req, res) => {
+  const documentId = req.params.id;
+
+  try {
+    const document = await Document.findById(documentId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (!document.fileData || !document.fileContentType) {
+      return res
+        .status(400)
+        .json({ message: "No file data available for preview." });
+    }
+
+    res.set("Content-Type", document.fileContentType);
+    res.status(200).send(document.fileData);
+  } catch (error) {
+    console.error("Error previewing document:", error);
+    res.status(500).json({
+      message: "Failed to preview document",
+      error: error.message,
+    });
+  }
+};
+
+export const downloadDocument = async (req, res) => {
+  try {
+    const documentId = req.params.id;
+
+    // Find the document by ID
+    const document = await Document.findById(documentId);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (!document.fileData || !document.fileContentType) {
+      return res
+        .status(400)
+        .json({ message: "No file data available for download." });
+    }
+
+    // Set headers for downloading the file
+    res.set({
+      "Content-Type": document.fileContentType,
+      "Content-Disposition": `attachment; filename="${document.step}"`, // Use the step as the file name
+    });
+
+    // Send the file data
+    res.status(200).send(document.fileData);
+  } catch (error) {
+    console.error("Error in downloadDocument:", error);
+    res.status(500).json({ message: error.message });
   }
 };
