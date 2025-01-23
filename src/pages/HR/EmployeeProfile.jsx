@@ -103,7 +103,7 @@ const EmployeeSummary = () => {
                 {/* Name as Link */}
                 <TableCell>
                   <a
-                    href={`/profile/${employee._id}`}
+                    href={`/profile/?userId=${employee._id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

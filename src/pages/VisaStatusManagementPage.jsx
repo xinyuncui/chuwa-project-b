@@ -49,11 +49,15 @@ const VisaStatusManagementPage = () => {
         //   onboardingApplication: { visaType: "OPT", status: "Pending", ... },
         //   documents: [ { step: "OPTReceipt", status: "Pending", ... }, ... ]
         // }
-        const response = await axios.get("http://localhost:3000/profileRoutes/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+
+        const response = await axios.get(
+          "http://localhost:3000/profileRoutes/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         // Extract data from response
         // Adjust field names according to your backend response structure
@@ -100,15 +104,17 @@ const VisaStatusManagementPage = () => {
       );
 
       // After upload success, re-fetch data to refresh the statuses
-      const refetchRes = await axios.get("http://localhost:3000/profileRoutes/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const refetchRes = await axios.get(
+        "http://localhost:3000/profileRoutes/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const { onboardingApplication, documents: updatedDocs } = refetchRes.data;
       if (onboardingApplication) setApplicationData(onboardingApplication);
       if (Array.isArray(updatedDocs)) setDocuments(updatedDocs);
-
     } catch (err) {
       setError("Failed to upload document.");
       console.error(err);
@@ -157,7 +163,8 @@ const VisaStatusManagementPage = () => {
               Current Application Status: <b>{status}</b>
             </Typography>
             <Typography sx={{ mt: 1 }}>
-              Since your visa type is not F1(OPT), there's no multi-step process required.
+              Since your visa type is not F1(OPT), there is no multi-step
+              process required.
             </Typography>
           </CardContent>
         </Card>

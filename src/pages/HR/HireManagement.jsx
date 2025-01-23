@@ -23,19 +23,16 @@ import { fetchApplications } from "../../redux/applicationStatusSlice";
 
 const HireManagement = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const { pending, rejected, approved, isloading, error } = useSelector(
     (state) => state.applicationStatus
   );
-  // const {history, fetching, err} = useSelector((state) => state.registrationStatus);
+  // console.log("redux store:", pending, rejected, approved);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [history, setHistory] = useState([]);
-  // const [pendingApplications, setPendingApplications] = useState([]);
-  // const [approvedApplications, setApprovedApplications] = useState([]);
-  // const [rejectedApplications, setRejectedApplications] = useState([]);
 
   const fetchHistory = async () => {
     setFetching(true);
@@ -50,9 +47,8 @@ const HireManagement = () => {
         }
       );
       const data = response.data;
-      console.log(data.history);
+      console.log("history:", data.history);
       setHistory(data.history);
-      console.log(history);
     } catch (e) {
       console.error(e);
       alert("Failed to fetch history:", e.message);
@@ -203,7 +199,16 @@ const HireManagement = () => {
                   </TableCell>
                   <TableCell sx={{ width: "33%" }}>{app.user.email}</TableCell>
                   <TableCell sx={{ width: "34%" }}>
-                    <Button variant="contained" onClick={() => navigate("/")}>
+                    <Button
+                      variant="contained"
+                      onClick={() =>
+                        window.open(
+                          `/view-application/?userId=${app.user._id}&appId=${app._id}`,
+                          "_blank",
+                          "noopener,noreferrer"
+                        )
+                      }
+                    >
                       View Application
                     </Button>
                     {/* <Button onClick={() => handleApprove(app.id)}>Approve</Button>

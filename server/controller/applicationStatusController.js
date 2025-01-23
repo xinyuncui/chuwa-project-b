@@ -1,6 +1,9 @@
 import OnboardingApplication from "../model/OnboardingApplication.js";
 export const getALLApplicationStatus = async (req, res) => {
   try {
+    const applications = await OnboardingApplication.find()
+      .populate("user")
+      .populate("documents");
     const pendingApplications = await OnboardingApplication.find({
       status: "Pending",
     }).populate("user", "email profile.name");
@@ -12,6 +15,7 @@ export const getALLApplicationStatus = async (req, res) => {
     }).populate("user", "email profile.name");
     // const applicationStatus = await OnboardingApplication.find();
     res.status(200).json({
+      allApplications: applications,
       pendingApplications: pendingApplications,
       approvedApplications: approvedApplications,
       rejectedApplications: rejectedApplications,

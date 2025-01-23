@@ -65,16 +65,16 @@ const NavBar = () => {
               >
                 <MenuItem
                   onClick={() => {
-                    handleMenuClose(); 
-                    navigate("/personal-information"); 
+                    handleMenuClose();
+                    navigate("/personal-information");
                   }}
                 >
                   Personal Information
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
-                    handleMenuClose(); 
-                    navigate("/visa-status-management"); 
+                    handleMenuClose();
+                    navigate("/visa-status-management");
                   }}
                 >
                   Visa Status Management
@@ -110,7 +110,12 @@ const NavBar = () => {
                 <MenuItem onClick={() => navigate("/employee-profile")}>
                   Employee Profiles
                 </MenuItem>
-                <MenuItem onClick={handleMenuClose}>
+                <MenuItem
+                  onClick={() => {
+                    navigate("/visa-status-managenment");
+                    handleMenuClose;
+                  }}
+                >
                   Visa Status Management
                 </MenuItem>
                 <MenuItem onClick={() => navigate("/hiring-management")}>

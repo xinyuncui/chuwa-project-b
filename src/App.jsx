@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import EmployeeSummary from "./pages/HR/EmployeeProfile";
 import EmployeeProfilePage from "./pages/HR/SingleEmployeePage";
 import VisaStatusManagementPage from "./pages/VisaStatusManagementPage";
+import HRVisaStatusManagementPage from "./pages/HR/VisaStatusPage";
 
 function App() {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -65,10 +66,27 @@ function App() {
               }
             />
             <Route
-              path="/profile/:id"
+              path="/profile"
               element={
                 <ProtectedRoute allowedRole={"HR"}>
-                  <EmployeeProfilePage />
+                  <EmployeeProfilePage isApplication={false} />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/view-application"
+              element={
+                <ProtectedRoute allowedRole={"HR"}>
+                  <EmployeeProfilePage isApplication={true} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/visa-status-managenment"
+              element={
+                <ProtectedRoute allowedRole={"HR"}>
+                  <HRVisaStatusManagementPage />
                 </ProtectedRoute>
               }
             />
