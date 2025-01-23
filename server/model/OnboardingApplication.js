@@ -16,7 +16,7 @@ const onboardingApplicationSchema = new mongoose.Schema(
     },
     visaType: {
       type: String,
-      enum: ["OPT", "H1-B", "L2", "H4", "Other"], // Visa type
+      enum: ["F1(CPT/OPT)", "H1-B", "L2", "H4", "Other"], // Visa type
       required: true,
     },
     documents: [

@@ -87,8 +87,8 @@ const VisaStatusManagementPage = () => {
       const token = localStorage.getItem("authToken");
       const formData = new FormData();
       formData.append("document", file);
-      formData.append("step", stepName);
-
+      formData.append("step", stepName); // Ensure stepName matches backend (e.g., "OPTReceipt")
+  
       await axios.post(
         "http://localhost:3000/profileRoutes/profile/uploadDocument",
         formData,
@@ -98,7 +98,7 @@ const VisaStatusManagementPage = () => {
           },
         }
       );
-
+  
       // After upload success, re-fetch data to refresh the statuses
       const refetchRes = await axios.get("http://localhost:3000/profileRoutes/profile", {
         headers: {
@@ -106,9 +106,12 @@ const VisaStatusManagementPage = () => {
         },
       });
       const { onboardingApplication, documents: updatedDocs } = refetchRes.data;
+      console.log("Refetched onboardingApplication:", onboardingApplication);
+      console.log("Refetched documents:", updatedDocs);
+  
       if (onboardingApplication) setApplicationData(onboardingApplication);
       if (Array.isArray(updatedDocs)) setDocuments(updatedDocs);
-
+  
     } catch (err) {
       setError("Failed to upload document.");
       console.error(err);
@@ -146,7 +149,7 @@ const VisaStatusManagementPage = () => {
   const { status, visaType } = applicationData;
 
   // 4) If not F1/OPT => single card with overall status
-  if (visaType !== "OPT") {
+  if (visaType !== "F1(CPT/OPT)") {
     return (
       <Box maxWidth={600} mx="auto" mt={4}>
         <Card>

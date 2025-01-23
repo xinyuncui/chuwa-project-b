@@ -143,7 +143,6 @@ export const uploadDocument = async (req, res) => {
 
     // Check if the file is present
     if (!req.file) {
-      // If no file or invalid file type
       return res
         .status(400)
         .json({ message: "No file uploaded or invalid file type." });
@@ -151,18 +150,15 @@ export const uploadDocument = async (req, res) => {
 
     // Retrieve docType and step from req.body or set defaults
     const docType = req.body.type || "OPT Receipt";
-    const step = req.body.step || "OPT Receipt";
+    const step = req.body.step || "OPTReceipt"; // Ensure step is "OPTReceipt"
 
     // Find or create OnboardingApplication
-    // Always set status to "Pending" if user uploads document
-    let onboardingApp = await OnboardingApplication.findOne({ user: userId });
+    let onboardingApp = await OnboardingApplication.findOne({ user: userId }).populate("documents");
     if (!onboardingApp) {
-      // Create new if none
       onboardingApp = new OnboardingApplication({
         user: userId,
         status: "Pending", // Force status to "Pending"
-        // You can set default visaType as well, or read from user.profile
-        visaType: "OPT", // Or read from profile
+        visaType: "F1(CPT/OPT)", // Set visaType to "F1(CPT/OPT)"
       });
     } else {
       // Force status to "Pending" upon document upload
@@ -171,13 +167,21 @@ export const uploadDocument = async (req, res) => {
 
     await onboardingApp.save();
 
+    // Check if a document for this step already exists
+    let existingDoc = onboardingApp.documents.find(doc => doc.step === step);
+    if (existingDoc) {
+      // If a document for this step exists, delete the old one
+      await Document.findByIdAndDelete(existingDoc._id);
+      onboardingApp.documents = onboardingApp.documents.filter(doc => doc.step !== step);
+    }
+
     // Create Document
     const newDoc = new Document({
       type: docType,
       uploadedBy: userId,
       relatedTo: onboardingApp._id, // Link to the application
       status: "Pending",
-      step,
+      step, // Set step to "OPTReceipt"
       feedback: "",
       uploadDate: new Date(),
       versionHistory: [
@@ -198,6 +202,12 @@ export const uploadDocument = async (req, res) => {
     // Push document reference to OnboardingApplication
     onboardingApp.documents.push(newDoc._id);
     await onboardingApp.save();
+
+    // If the document is OPT Receipt, update the profile's optReceipt field
+    if (docType === "OPT Receipt") {
+      user.profile.residency.workAuthorization.optReceipt = newDoc._id;
+      await user.save();
+    }
 
     // Return newly created doc record
     return res.status(200).json(newDoc);
