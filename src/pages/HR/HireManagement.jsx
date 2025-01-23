@@ -25,7 +25,7 @@ const HireManagement = () => {
   const dispatch = useDispatch();
   // const navigate = useNavigate();
 
-  const { pending, rejected, approved, isloading, error } = useSelector(
+  const { all, pending, rejected, approved, isloading, error } = useSelector(
     (state) => state.applicationStatus
   );
   // console.log("redux store:", pending, rejected, approved);
@@ -184,7 +184,7 @@ const HireManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {fetching ? (
+            {isloading ? (
               <TableRow>
                 <TableCell colSpan={3} align="center">
                   <CircularProgress size={24} />
@@ -343,37 +343,3 @@ const HireManagement = () => {
 };
 
 export default HireManagement;
-//   const history = [
-//     {
-//       email: "john.doe@example.com",
-//       link: "http://example.",
-//       status: "unsubmitted",
-//     },
-//     {
-//       email: "jane.doe@example.com",
-//       link: "http://example.",
-//       status: "submitted",
-//     },
-//     {
-//       email: "jack.doe@example.com",
-//       link: "http://example.",
-//       status: "submitted",
-//     },
-//     {
-//       email: "john.doe@example.com",
-//       link: "http://example.",
-//       status: "unsubmitted",
-//     },
-//     {
-//       email: "jane.doe@example.com",
-//       link: "http://example.",
-//       status: "submitted",
-//     },
-//     {
-//       email: "jack.doe@example.com",
-//       link: "http://example.",
-//       status: "submitted",
-//     },
-//   ];
-
-// fetch backend api

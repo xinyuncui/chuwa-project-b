@@ -121,7 +121,7 @@ const PersonalInformationPage = () => {
         errors.visaType = "Please choose your work authorization type.";
       }
       // If visaType is 'F1(CPT/OPT)', user must upload OPT Receipt
-      if (visaType === "F1(CPT/OPT)") {
+      if (visaType === "OPT") {
         // If optReceipt is null or undefined, add error
         if (!optReceipt) {
           errors.optReceipt =
@@ -283,7 +283,7 @@ const PersonalInformationPage = () => {
                               ? prev.residency.workAuthorization.otherVisaTitle
                               : "",
                           optReceipt:
-                            e.target.value === "F1(CPT/OPT)"
+                            e.target.value === "OPT"
                               ? prev.residency.workAuthorization.optReceipt
                               : null,
                         },
@@ -295,7 +295,7 @@ const PersonalInformationPage = () => {
                   <option value="">--Select--</option>
                   <option value="H1-B">H1-B</option>
                   <option value="L2">L2</option>
-                  <option value="F1(CPT/OPT)">F1(CPT/OPT)</option>
+                  <option value="OPT">F1(CPT/OPT)</option>
                   <option value="H4">H4</option>
                   <option value="Other">Other</option>
                 </select>
@@ -602,7 +602,7 @@ const PersonalInformationPage = () => {
               {/* If visaType = F1(CPT/OPT), show upload button for OPT Receipt */}
               {editMode &&
                 tempData.residency.workAuthorization.visaType ===
-                  "F1(CPT/OPT)" && (
+                  "OPT" && (
                   <Box sx={{ mt: 2, mb: 2 }}>
                     <Typography variant="body2">
                       Upload your OPT receipt (required for F1(CPT/OPT))

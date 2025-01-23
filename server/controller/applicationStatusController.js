@@ -32,18 +32,34 @@ export const getALLApplicationStatus = async (req, res) => {
 export const ApproveApplication = async (req, res) => {
   try {
     const applicationId = req.params.id;
-    console.log(`Approve application ${applicationId}`);
-    const application = await OnboardingApplication.findById(applicationId);
+    const { step } = req.body; 
+
+    console.log(`Approve application ${applicationId} for step ${step}`);
+
+    const application = await OnboardingApplication.findById(applicationId).populate("documents");
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
-    application.status = "Approved";
-    await application.save();
-    res.status(200).json({ message: "Application approved successfully" });
+
+    const document = application.documents.find(doc => doc.step === step);
+    if (!document) {
+      return res.status(404).json({ message: `Document for step ${step} not found` });
+    }
+
+    document.status = "Approved";
+    await document.save();
+
+    if (step === "I20") {
+      application.status = "Approved";
+      await application.save();
+    }
+
+    res.status(200).json({ message: "Application and document approved successfully" });
   } catch (err) {
+    console.error("Error in ApproveApplication:", err);
     res.status(500).json({
       message: "Failed to approve application",
-      error: err,
+      error: err.message,
     });
   }
 };

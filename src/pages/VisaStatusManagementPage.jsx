@@ -27,7 +27,7 @@ const VisaStatusManagementPage = () => {
 
   // Define the steps for F1(OPT)
   const steps = [
-    { stepName: "OPTReceipt", displayName: "OPT Receipt" },
+    { stepName: "OPT Receipt", displayName: "OPT Receipt" },
     { stepName: "OPTEAD", displayName: "OPT EAD" },
     { stepName: "I983", displayName: "I-983" },
     { stepName: "I20", displayName: "I-20" },

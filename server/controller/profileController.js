@@ -158,76 +158,81 @@ export const uploadDocument = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the file is present
     if (!req.file) {
       return res
         .status(400)
         .json({ message: "No file uploaded or invalid file type." });
     }
 
-    // Retrieve docType and step from req.body or set defaults
     const docType = req.body.type || "OPT Receipt";
-    const step = req.body.step || "OPTReceipt"; // Ensure step is "OPTReceipt"
+    const step = req.body.step || "OPT Receipt";
 
-    // Find or create OnboardingApplication
-    let onboardingApp = await OnboardingApplication.findOne({ user: userId }).populate("documents");
+    let onboardingApp = await OnboardingApplication.findOne({ user: userId });
     if (!onboardingApp) {
       onboardingApp = new OnboardingApplication({
         user: userId,
-        status: "Pending", // Force status to "Pending"
-        visaType: "F1(CPT/OPT)", // Set visaType to "F1(CPT/OPT)"
+        status: "Pending",
+        visaType: "OPT",
       });
     } else {
-      // Force status to "Pending" upon document upload
       onboardingApp.status = "Pending";
     }
 
     await onboardingApp.save();
 
-    // Check if a document for this step already exists
-    let existingDoc = onboardingApp.documents.find(doc => doc.step === step);
-    if (existingDoc) {
-      // If a document for this step exists, delete the old one
-      await Document.findByIdAndDelete(existingDoc._id);
-      onboardingApp.documents = onboardingApp.documents.filter(doc => doc.step !== step);
-    }
-
-    // Create Document
-    const newDoc = new Document({
-      type: docType,
-      uploadedBy: userId,
-      relatedTo: onboardingApp._id, // Link to the application
-      status: "Pending",
-      step, // Set step to "OPTReceipt"
-      feedback: "",
-      uploadDate: new Date(),
-      versionHistory: [
-        {
-          version: 1,
-          status: "Pending",
-          feedback: "",
-          uploadDate: new Date(),
-        },
-      ],
-      fileData: req.file.buffer, // Save file as buffer in DB
-      fileContentType: req.file.mimetype, // Store MIME type
+    let existingDoc = await Document.findOne({
+      relatedTo: onboardingApp._id,
+      step: step,
     });
 
-    // Save document
-    await newDoc.save();
+    if (existingDoc) {
+      existingDoc.type = docType;
+      existingDoc.fileData = req.file.buffer;
+      existingDoc.fileContentType = req.file.mimetype;
+      existingDoc.status = "Pending";
+      existingDoc.feedback = "";
+      existingDoc.uploadDate = new Date();
+      existingDoc.versionHistory.push({
+        version: existingDoc.versionHistory.length + 1,
+        status: "Pending",
+        feedback: "",
+        uploadDate: new Date(),
+      });
+      await existingDoc.save();
+    } else {
+      const newDoc = new Document({
+        type: docType,
+        uploadedBy: userId,
+        relatedTo: onboardingApp._id,
+        status: "Pending",
+        step,
+        feedback: "",
+        uploadDate: new Date(),
+        versionHistory: [
+          {
+            version: 1,
+            status: "Pending",
+            feedback: "",
+            uploadDate: new Date(),
+          },
+        ],
+        fileData: req.file.buffer,
+        fileContentType: req.file.mimetype,
+      });
 
-    // Push document reference to OnboardingApplication
-    onboardingApp.documents.push(newDoc._id);
-    await onboardingApp.save();
-
-    // If the document is OPT Receipt, update the profile's optReceipt field
-    if (docType === "OPT Receipt") {
-      user.profile.residency.workAuthorization.optReceipt = newDoc._id;
-      await user.save();
+      await newDoc.save();
+      onboardingApp.documents.push(newDoc._id);
+      await onboardingApp.save();
     }
 
-    // Return newly created doc record
-    return res.status(200).json(newDoc);
+    const updatedDocs = await Document.find({
+      relatedTo: onboardingApp._id,
+      step: step,
+    });
+
+    const latestDoc = updatedDocs[updatedDocs.length - 1];
+
+    return res.status(200).json(latestDoc);
   } catch (error) {
     console.error("Error in uploadDocument:", error);
     return res.status(500).json({ message: error.message });
