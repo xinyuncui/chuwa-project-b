@@ -1,4 +1,5 @@
 import Document from "../model/Document.js"; // Replace with the actual path to your Document schema
+import OnboardingApplication from "../model/OnboardingApplication.js"; 
 export const getALL = async (req, res) => {
   try {
     const documents = await Document.find({}, "-fileData");
@@ -15,17 +16,26 @@ export const getALL = async (req, res) => {
 
 export const approveDocument = async (req, res) => {
   const documentId = req.params.id;
-  console.log(documentId);
-  try {
-    const document = await Document.findById(documentId);
+  console.log(`Approving document ID: ${documentId}`);
 
+  try {
+    const document = await Document.findById(documentId).populate("relatedTo");
     if (!document) {
       return res.status(404).json({ message: "Document not found" });
     }
 
     document.status = "Approved";
-
     await document.save();
+
+
+    if (document.step === "I20") { 
+      const application = await OnboardingApplication.findById(document.relatedTo);
+      if (application) {
+        application.status = "Approved";
+        await application.save();
+        console.log(`Application ID: ${application._id} status updated to Approved`);
+      }
+    }
 
     res.status(200).json({
       message: "Document approved successfully",
