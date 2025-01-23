@@ -30,6 +30,7 @@ const HRVisaStatusManagementPage = () => {
 
   const [open, setOpen] = useState(false); // Dialog open state
   const [feedback, setFeedback] = useState(""); // Feedback input state
+  const [searchQuery, setSearchQuery] = useState("");
   const { all, loading } = useSelector((state) => state.applicationStatus);
   console.log("all:", all);
   const currentDate = new Date();
@@ -54,8 +55,8 @@ const HRVisaStatusManagementPage = () => {
   const nextStep = {
     OPTReceipt: "upload OPT EAD",
     OPTEAD: "upload I-983",
-    "I-983": "upload I-20",
-    "I-20": "all set",
+    I983: "upload I-20",
+    I20: "all set",
   };
 
   const handleApprove = async (docId) => {
@@ -114,6 +115,14 @@ const HRVisaStatusManagementPage = () => {
     }
   };
 
+  const filteredApplications = all.filter((app) => {
+    const fullName =
+      app.user.profile.name.firstName.toLowerCase() +
+      " " +
+      app.user.profile.name.lastName.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase());
+  });
+
   return (
     <Box sx={{ p: 3, maxWidth: "900px", margin: "auto" }}>
       {/* Pending Applications */}
@@ -148,6 +157,7 @@ const HRVisaStatusManagementPage = () => {
                   <TableRow key={i}>
                     <TableCell sx={{ width: "20%" }}>
                       {app.user.profile.name.firstName +
+                        " " +
                         app.user.profile.name.lastName}
                     </TableCell>
                     <TableCell sx={{ width: "15%" }}>{app.visaType}</TableCell>
@@ -334,6 +344,15 @@ const HRVisaStatusManagementPage = () => {
       <Typography variant="h6" sx={{ mb: 2 }}>
         Visa Status
       </Typography>
+      {/* Search Bar */}
+      <TextField
+        label="Search by Name"
+        variant="outlined"
+        fullWidth
+        sx={{ mb: 3 }}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
       <TableContainer
         component={Paper}
         sx={{ maxHeight: 300, overflowY: "auto", mb: 3 }}
@@ -356,11 +375,12 @@ const HRVisaStatusManagementPage = () => {
                   <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
-            ) : all.length > 0 ? (
-              all.map((app, i) => (
+            ) : filteredApplications.length > 0 ? (
+              filteredApplications.map((app, i) => (
                 <TableRow key={i}>
                   <TableCell sx={{ width: "20%" }}>
                     {app.user.profile.name.firstName +
+                      " " +
                       app.user.profile.name.lastName}
                   </TableCell>
                   <TableCell sx={{ width: "15%" }}>{app.visaType}</TableCell>

@@ -236,7 +236,7 @@ const EmployeeProfilePage = ({ isApplication }) => {
               <Typography>{doc.name}</Typography>
               <Typography
                 component="a"
-                href={doc.url}
+                href={`${baseUrl}/document/preview/${doc._id}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
